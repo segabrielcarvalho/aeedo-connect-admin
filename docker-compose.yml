@@ -1,0 +1,127 @@
+version: "3.9"
+
+services:
+  admin:
+    build:
+      context: ./apps/aeedo-connect-admin
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT_ADMIN}:${PORT_ADMIN}"
+    environment:
+      - PORT=${PORT_ADMIN}
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:${PORT_API}
+    volumes:
+      - admin_logs:/app/logs
+    networks:
+      - app-network
+    profiles:
+      - admin
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${PORT_ADMIN} || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: ./apps/aeedo-connect-web
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT_WEB}:${PORT_WEB}"
+    environment:
+      - PORT=${PORT_WEB}
+    volumes:
+      - web_logs:/app/logs
+    networks:
+      - app-network
+    profiles:
+      - web
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${PORT_WEB} || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  doc:
+    build:
+      context: ./apps/aeedo-connect-doc
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT_DOC}:${PORT_DOC}"
+    environment:
+      - PORT=${PORT_DOC}
+    volumes:
+      - doc_logs:/app/logs
+    networks:
+      - app-network
+    profiles:
+      - doc
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${PORT_DOC} || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  laravel.test:
+    build:
+      context: ./apps/aeedo-connect-api/vendor/laravel/sail/runtimes/8.4
+      dockerfile: Dockerfile
+      args:
+        WWWGROUP: "${WWWGROUP}"
+    image: sail-8.4/app
+    ports:
+      - "${APP_PORT:-80}:80"
+      - "${VITE_PORT:-5173}:${VITE_PORT:-5173}"
+    environment:
+      WWWUSER: "${WWWUSER}"
+      LARAVEL_SAIL: 1
+      XDEBUG_MODE: "${SAIL_XDEBUG_MODE:-off}"
+      XDEBUG_CONFIG: "${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}"
+      IGNITION_LOCAL_SITES_PATH: "${PWD}"
+    volumes:
+      - ./apps/aeedo-connect-api:/var/www/html
+    networks:
+      - app-network
+    depends_on:
+      - mysql
+    profiles:
+      - api
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${APP_PORT:-80} || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  mysql:
+    image: mysql/mysql-server:8.0
+    ports:
+      - "${FORWARD_DB_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    volumes:
+      - sail-mysql:/var/lib/mysql
+      - ./apps/aeedo-connect-api/vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        CMD: mysqladmin ping -p"${DB_PASSWORD}"
+      retries: 3
+      timeout: 5s
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  admin_logs:
+  web_logs:
+  api_logs:
+  doc_logs:
+  sail-mysql:
+    driver: local
