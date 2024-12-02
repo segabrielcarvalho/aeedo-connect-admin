@@ -12,7 +12,11 @@ const ProfileSection: React.FC = () => {
     { id: "phone", label: "Telefone", value: "(62) 9 82595874" },
     { id: "email", label: "Email", value: "hospitalsc@example.com" },
     { id: "status", label: "Ativo", value: "Sim" },
-    { id: "address_id", label: "Endereço", value: "id do endereço" },
+    {
+      id: "address_id",
+      label: "Endereço",
+      value: "Rua Oscar Niemeyer, 290, 75044-120",
+    },
     { id: "createdAt", label: "Criado em", value: "29/11/2023" },
   ];
 

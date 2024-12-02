@@ -27,7 +27,7 @@ export const HospitalsTable = () => {
         phone: "(11) 99999-9999",
         email: "hospital@example.com",
         status: "Ativo",
-        address_id: "id do endereço",
+        address_id: "Avenida Jorge e Mateus",
       }))}
       columns={[
         {
