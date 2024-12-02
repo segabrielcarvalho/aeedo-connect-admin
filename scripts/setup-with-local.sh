@@ -85,6 +85,11 @@ envExamples=(
   "../../envs/.env.admin.example"
 )
 
+if [ -z "$PORT_API" ] || [ -z "$PORT_WEB" ] || [ -z "$PORT_DOC" ] || [ -z "$PORT_ADMIN" ]; then
+  echo -e "${RED}Erro: Certifique-se de que as variáveis PORT_API, PORT_WEB, PORT_DOC, e PORT_ADMIN estejam definidas no arquivo .env.${RESET}"
+  exit 1
+fi
+
 for i in "${!apps[@]}"; do
   app="${apps[i]}"
   env="${envExamples[i]}"
@@ -92,22 +97,32 @@ for i in "${!apps[@]}"; do
   echo -e "${YELLOW}Configurando ${app}...${RESET}"
 
   cd "$app" || exit
-  cp "$env" .env || { echo -e "${RED}Erro ao copiar o arquivo .env para ${app}.${RESET}"; exit 1; }
-  echo -e "${GREEN}.env configurado para ${app}.${RESET}"
+
+  if [ "$app" = "aeedo-connect-api" ]; then
+    cp "$env" .env || { echo -e "${RED}Erro ao copiar o arquivo .env para ${app}.${RESET}"; exit 1; }
+    echo -e "${GREEN}.env configurado para ${app}.${RESET}"
+  else
+    cp "$env" .env.local || { echo -e "${RED}Erro ao copiar o arquivo .env.local para ${app}.${RESET}"; exit 1; }
+    echo -e "${GREEN}.env.local configurado para ${app}.${RESET}"
+  fi
 
   echo -e "${CYAN}Instalando dependências para ${app}...${RESET}"
   $packageCommand || { echo -e "${RED}Erro ao instalar dependências para ${app}. Verifique o gerenciador de pacotes.${RESET}"; exit 1; }
 
   if [ "$app" = "aeedo-connect-api" ]; then
     echo -e "${CYAN}Configurando e iniciando o Laravel para ${app}...${RESET}"
+    if ! command -v composer &> /dev/null; then
+      echo -e "${RED}Composer não encontrado. Instale o Composer para continuar.${RESET}"
+      exit 1
+    fi
     composer install || { echo -e "${RED}Erro ao instalar dependências do Composer.${RESET}"; exit 1; }
     php artisan key:generate || { echo -e "${RED}Erro ao gerar chave do Laravel.${RESET}"; exit 1; }
     php artisan migrate --force || { echo -e "${RED}Erro ao executar migrações do Laravel.${RESET}"; exit 1; }
-    php artisan serve --host=0.0.0.0 --port="${PORT_API}" || { echo -e "${RED}Erro ao iniciar o servidor Laravel.${RESET}"; exit 1; }
+    php artisan serve --host=0.0.0.0 --port="${PORT_API}" > laravel.log 2>&1 &
   else
     echo -e "${CYAN}Construindo e iniciando o ${app}...${RESET}"
     $buildCommand || { echo -e "${RED}Erro ao construir o ${app}.${RESET}"; exit 1; }
-    $runCommand & || { echo -e "${RED}Erro ao iniciar o ${app}.${RESET}"; exit 1; }
+    $runCommand > nextjs_${app}.log 2>&1 &
   fi
 
   cd ..

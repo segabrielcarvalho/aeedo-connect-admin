@@ -41,23 +41,12 @@ Verifique a pasta `envs/` para garantir que os arquivos `.env.example` estejam d
 
 ### 3. Executando o Script de Setup
 
-Você pode escolher entre duas formas de configurar o ambiente: Local ou com Docker.
-
-#### 3.1 Setup Local
-
-Para executar o setup local, rode:
+Para configurar o ambiente, rode o seguinte comando:
 ```bash
-  bash ./scripts/setup-with-local.sh
+  bash ./scripts/setup.sh
 ```
-Este script irá perguntar qual gerenciador de pacotes deseja utilizar (`npm`, `yarn` ou `pnpm`), configurar os ambientes, instalar dependências e iniciar os componentes.
 
-#### 3.2 Setup com Docker
-
-Para configurar utilizando Docker, rode:
-```bash
-  bash ./scripts/setup-with-docker.sh
-```
-Este script irá verificar se o Docker e Docker Compose estão instalados, clonar os repositórios, configurar os ambientes e levantar os containers.
+Este script irá perguntar se você deseja configurar o ambiente localmente ou utilizando Docker e, em seguida, direcionará para o script apropriado (`setup-with-local.sh` ou `setup-with-docker.sh`).
 
 ### 4. Acessando os Serviços
 
