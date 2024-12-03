@@ -40,7 +40,7 @@ const DesktopSideBar = () => {
             </li>
             <li className="-mx-6 mt-auto mb-16">
               <a
-                href="#"
+                href="/dashboard/me"
                 className="flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-gray-900 hover:bg-gray-50"
               >
                 <img
@@ -53,7 +53,7 @@ const DesktopSideBar = () => {
               </a>
 
               <a
-                href="#"
+                href="/dashboard/me"
                 className="flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold  hover:bg-gray-50 text-gray-400 hover:text-primary-default"
               >
                 <ArrowLeftStartOnRectangleIcon
