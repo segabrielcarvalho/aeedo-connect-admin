@@ -9,7 +9,11 @@ const routes = {
       show: { path: "/dashboard/users/[userId]" },
       create: { path: "/dashboard/users/create" },
     },
-    hospitals: { path: "/dashboard/hospitals" },
+    hospitals: {
+      path: "/dashboard/hospitals",
+      show: { path: "/dashboard/hospitals/[hospitalId]" },
+      create: { path: "/dashboard/hospitals/create" },
+    },
     organs: { path: "/dashboard/organs" },
   },
   auth: {

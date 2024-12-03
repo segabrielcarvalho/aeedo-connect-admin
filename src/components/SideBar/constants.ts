@@ -17,7 +17,7 @@ export const navigation: NavigationItem[] = [
   { name: "Usuários", href: routes.dashboard.users.path, icon: UsersIcon },
   {
     name: "Hospitais",
-    href: "#",
+    href: routes.dashboard.hospitals.path,
     icon: BuildingStorefrontIcon,
   },
   {
