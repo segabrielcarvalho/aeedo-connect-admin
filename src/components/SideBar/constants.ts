@@ -22,7 +22,7 @@ export const navigation: NavigationItem[] = [
   },
   {
     name: "Órgãos",
-    href: "#",
+    href: "/dashboard/orgaos",
     icon: HeartIcon,
   },
   {

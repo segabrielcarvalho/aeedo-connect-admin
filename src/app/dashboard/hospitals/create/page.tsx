@@ -19,7 +19,10 @@ import {
 } from "react-icons/gi";
 import { IoWaterOutline } from "react-icons/io5";
 import { LuBone, LuBrain } from "react-icons/lu";
-import { CreateHospitalVariables } from "./_/dto";
+import {
+  CreateHospitalAddressVariables,
+  CreateHospitalVariables,
+} from "./_/dto";
 
 export const organIcons = {
   Coração: <FaHeart className="w-8 h-8 text-red-500" />,
@@ -41,12 +44,12 @@ const organsList = Object.keys(organIcons);
 const CreateHospitalPage: React.FC = () => {
   const router = useRouter();
   const { error, success } = useToastHook();
-  const { control, reset, handleSubmit, watch, setValue } =
-    useForm<CreateHospitalVariables>();
-
-  const submitImplementation: SubmitHandler<CreateHospitalVariables> = async (
-    args
-  ) => {
+  const { control, reset, handleSubmit, watch, setValue } = useForm<
+    CreateHospitalVariables & CreateHospitalAddressVariables
+  >();
+  const submitImplementation: SubmitHandler<
+    CreateHospitalVariables & CreateHospitalAddressVariables
+  > = async (args) => {
     try {
       success({ message: "Hospital criado com sucesso." });
       reset();
@@ -62,14 +65,13 @@ const CreateHospitalPage: React.FC = () => {
       className="space-y-12 w-full"
       onSubmit={handleSubmit(submitImplementation)}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="flex flex-col md:grid grid-cols-1 md:grid-cols-3 gap-8 pb-10">
         <div>
           <SectionHeading
             title="Informações Básicas"
             description="Preencha as informações abaixo para criar um novo hospital."
           />
         </div>
-
         <div className="grid grid-cols-1 gap-y-6">
           <Controller
             control={control}
@@ -105,6 +107,38 @@ const CreateHospitalPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-y-6">
           <Controller
             control={control}
+            name="data.phone"
+            render={({ field: { name, onChange, ref } }) => (
+              <Input
+                ref={ref}
+                onChange={onChange}
+                label="Telefone"
+                placeholder='Ex: "(11) 99999-9999"'
+                name={name}
+                isRequired
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="data.cnpj"
+            render={({ field: { name, onChange, ref } }) => (
+              <Input
+                ref={ref}
+                onChange={onChange}
+                label="CNPJ"
+                placeholder="Insira seu CNPJ"
+                name={name}
+                isRequired
+              />
+            )}
+          />
+        </div>
+
+        <div className="grid col-start-2 gap-y-6">
+          <Controller
+            control={control}
             name="data.password"
             render={({ field: { name, onChange, ref } }) => (
               <Input
@@ -118,12 +152,119 @@ const CreateHospitalPage: React.FC = () => {
               />
             )}
           />
+        </div>
 
+        <div className="grid col-start-3 gap-y-6">
           <Input
             name="confirmPassword"
             type="password"
-            label="Senha"
+            label="Confirmar Senha"
             placeholder="Digite uma senha"
+            isRequired
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col md:grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <SectionHeading
+            title="Endereço"
+            description="Preencha os campos para adicionar o endereço do hospital."
+          />
+        </div>
+        <div className="grid grid-cols-1 gap-y-6">
+          <Controller
+            control={control}
+            name="data.zipCode"
+            render={({ field: { name, onChange, ref } }) => (
+              <Input
+                ref={ref}
+                onChange={onChange}
+                label="Caixa Postal"
+                placeholder="CEP"
+                name={name}
+                isRequired
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="data.street"
+            render={({ field: { name, onChange, ref } }) => (
+              <Input
+                ref={ref}
+                onChange={onChange}
+                label="Rua"
+                placeholder='Ex: "Rua Oscar Niemeyer"'
+                name={name}
+                isRequired
+              />
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-y-6">
+          <Controller
+            control={control}
+            name="data.neighborhood"
+            render={({ field: { name, onChange, ref } }) => (
+              <Input
+                ref={ref}
+                onChange={onChange}
+                label="Bairro"
+                placeholder='Ex: "Av. Filostro"'
+                name={name}
+                isRequired
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="data.houseNumber"
+            render={({ field: { name, onChange, ref } }) => (
+              <Input
+                ref={ref}
+                onChange={onChange}
+                label="Número"
+                placeholder='Ex: "90"'
+                name={name}
+                isRequired
+              />
+            )}
+          />
+        </div>
+
+        <div className="grid col-start-2 gap-y-6">
+          <Controller
+            control={control}
+            name="data.complement"
+            render={({ field: { name, onChange, ref } }) => (
+              <Input
+                ref={ref}
+                onChange={onChange}
+                label="Complemento"
+                placeholder='Ex: "Próximo ao mercado"'
+                name={name}
+                isRequired
+              />
+            )}
+          />
+
+          <Input
+            name="data.city"
+            label="Cidade"
+            placeholder='Ex: "São Paulo"'
+            isRequired
+          />
+        </div>
+
+        <div>
+          <Input
+            name="data.state"
+            label="Estado"
+            placeholder='Ex: "Goiás"'
             isRequired
           />
         </div>

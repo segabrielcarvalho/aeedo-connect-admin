@@ -10,6 +10,17 @@ interface UserProfileProps {
   isTest?: boolean;
 }
 
+export interface MeProfileProps {
+  name: string;
+  role: string;
+  email: string;
+  document: number;
+  birthdate: string;
+  type: string;
+  active: string;
+  created_at: string;
+}
+
 export default function UserProfile({
   name,
   email,

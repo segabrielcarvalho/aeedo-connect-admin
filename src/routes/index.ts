@@ -15,6 +15,7 @@ const routes = {
       create: { path: "/dashboard/hospitals/create" },
     },
     organs: { path: "/dashboard/organs" },
+    me: { path: "/dashboard/me" },
   },
   auth: {
     login: { path: "/auth/login" },
