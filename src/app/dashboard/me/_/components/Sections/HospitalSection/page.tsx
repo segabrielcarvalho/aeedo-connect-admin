@@ -3,7 +3,7 @@
 import Button from "@/components/Button";
 import React from "react";
 import SectionHeading from "../../../../../../../components/SectionHeading";
-import { HospitalField } from "../../HospitalField";
+import { HospitalField } from "../../../../../hospitals/[hospitalId]/_/components/HospitalField";
 
 export interface Hospital {
   id: number;

@@ -9,7 +9,7 @@ export const HospitalField: React.FC<HospitalItemProps> = ({
   hospital,
   onEdit,
 }) => (
-  <li className="py-6">
+  <li className="py-6 border-2 p-4 rounded-lg">
     <div className="flex justify-between items-center mb-4">
       <div className="text-lg font-semibold text-gray-900">{hospital.name}</div>
     </div>
