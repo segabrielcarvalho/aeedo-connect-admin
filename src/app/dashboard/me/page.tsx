@@ -1,5 +1,9 @@
-const Me = () => {
-  return <div>hello me</div>;
-};
+import dynamic from "next/dynamic";
 
-export default Me;
+const ShowUser = dynamic<Record<string, never>>(() =>
+  import("./_/index").then((x) => x.ShowUser)
+);
+
+export default function ShowUserPage() {
+  return <ShowUser />;
+}
