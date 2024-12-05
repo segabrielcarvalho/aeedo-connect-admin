@@ -28,23 +28,6 @@ import { IoWaterOutline } from "react-icons/io5";
 import { LuBone, LuBrain } from "react-icons/lu";
 import { CreateUserVariables } from "./_/dto";
 
-export const organIcons = {
-  Coração: <FaHeart className="w-8 h-8 text-red-500" />,
-  Pulmão: <BsLungs className="w-8 h-8 text-blue-500" />,
-  Rim: <GiKidneys className="w-8 h-8 text-purple-500" />,
-  Fígado: <GiLiver className="w-8 h-8 text-orange-500" />,
-  Pâncreas: <GiInternalOrgan className="w-8 h-8 text-yellow-500" />,
-  Intestino: <GiInternalOrgan className="w-8 h-8 text-green-500" />,
-  "Medula Óssea": <LuBrain className="w-8 h-8 text-gray-500" />,
-  Córnea: <FaRegEye className="w-8 h-8 text-blue-400" />,
-  Pele: <IoWaterOutline className="w-8 h-8 text-pink-400" />,
-  Ossos: <LuBone className="w-8 h-8 text-gray-400" />,
-  Cartilagem: <BiDetail className="w-8 h-8 text-teal-500" />,
-  Tendões: <GiTiedScroll className="w-8 h-8 text-yellow-600" />,
-  "Válvulas Cardíacas": <GiValve className="w-8 h-8 text-red-400" />,
-};
-const organsList = Object.keys(organIcons);
-
 const CreateUserPage: React.FC = () => {
   const router = useRouter();
   const { error, success } = useToastHook();
@@ -54,6 +37,23 @@ const CreateUserPage: React.FC = () => {
   const role = watch("data.role");
   const patientType = watch("data.patientType");
   const selectedOrgans = watch("data.organs") || [];
+
+  const organIcons = {
+    Coração: <FaHeart className="w-8 h-8 text-red-500" />,
+    Pulmão: <BsLungs className="w-8 h-8 text-blue-500" />,
+    Rim: <GiKidneys className="w-8 h-8 text-purple-500" />,
+    Fígado: <GiLiver className="w-8 h-8 text-orange-500" />,
+    Pâncreas: <GiInternalOrgan className="w-8 h-8 text-yellow-500" />,
+    Intestino: <GiInternalOrgan className="w-8 h-8 text-green-500" />,
+    "Medula Óssea": <LuBrain className="w-8 h-8 text-gray-500" />,
+    Córnea: <FaRegEye className="w-8 h-8 text-blue-400" />,
+    Pele: <IoWaterOutline className="w-8 h-8 text-pink-400" />,
+    Ossos: <LuBone className="w-8 h-8 text-gray-400" />,
+    Cartilagem: <BiDetail className="w-8 h-8 text-teal-500" />,
+    Tendões: <GiTiedScroll className="w-8 h-8 text-yellow-600" />,
+    "Válvulas Cardíacas": <GiValve className="w-8 h-8 text-red-400" />,
+  };
+  const organsList = Object.keys(organIcons);
 
   const toggleOrganSelection = (organ: string) => {
     setValue(

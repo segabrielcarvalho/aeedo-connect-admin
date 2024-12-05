@@ -6,10 +6,21 @@ import routes from "@/routes";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { BiDetail } from "react-icons/bi";
+import { BsLungs } from "react-icons/bs";
+import { FaHeart, FaRegEye } from "react-icons/fa";
+import {
+  GiInternalOrgan,
+  GiKidneys,
+  GiLiver,
+  GiTiedScroll,
+  GiValve,
+} from "react-icons/gi";
+import { IoWaterOutline } from "react-icons/io5";
+import { LuBone, LuBrain } from "react-icons/lu";
 import SectionHeading from "../../../../../components/SectionHeading";
 import SelectableButton from "../../../../../components/SelectableButton";
 import useToastHook from "../../../../../hooks/useToastHook";
-import { organIcons } from "../../../users/create/page";
 import { CreateOrganVariables } from "../dto/index";
 
 interface OrganSectionProps {
@@ -20,6 +31,21 @@ const OrgaosTable: React.FC<OrganSectionProps> = ({ userOrgans }) => {
   const { control, reset, handleSubmit, watch, setValue } =
     useForm<CreateOrganVariables>();
 
+  const organIcons = {
+    Coração: <FaHeart className="w-8 h-8 text-red-500" />,
+    Pulmão: <BsLungs className="w-8 h-8 text-blue-500" />,
+    Rim: <GiKidneys className="w-8 h-8 text-purple-500" />,
+    Fígado: <GiLiver className="w-8 h-8 text-orange-500" />,
+    Pâncreas: <GiInternalOrgan className="w-8 h-8 text-yellow-500" />,
+    Intestino: <GiInternalOrgan className="w-8 h-8 text-green-500" />,
+    "Medula Óssea": <LuBrain className="w-8 h-8 text-gray-500" />,
+    Córnea: <FaRegEye className="w-8 h-8 text-blue-400" />,
+    Pele: <IoWaterOutline className="w-8 h-8 text-pink-400" />,
+    Ossos: <LuBone className="w-8 h-8 text-gray-400" />,
+    Cartilagem: <BiDetail className="w-8 h-8 text-teal-500" />,
+    Tendões: <GiTiedScroll className="w-8 h-8 text-yellow-600" />,
+    "Válvulas Cardíacas": <GiValve className="w-8 h-8 text-red-400" />,
+  };
   const organsList = Object.keys(organIcons);
 
   const [selectedOrgans, setSelectedOrgans] = useState<string[]>(userOrgans);
