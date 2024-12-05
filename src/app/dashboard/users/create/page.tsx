@@ -1,6 +1,6 @@
 "use client";
 import Button from "@/components/Button";
-import Input from "@/components/Form/Input";
+import { Input } from "@/components/Form/Input";
 import SectionHeading from "@/components/SectionHeading";
 import SelectableButton from "@/components/SelectableButton";
 import useToastHook from "@/hooks/useToastHook";

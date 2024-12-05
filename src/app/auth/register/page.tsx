@@ -1,6 +1,6 @@
 "use client";
 import Button from "@/components/Button";
-import Input from "@/components/Form/Input";
+import { Input } from "@/components/Form/Input";
 import { Logo } from "@/components/Logo";
 import routes from "@/routes";
 import NextLink from "next/link";
