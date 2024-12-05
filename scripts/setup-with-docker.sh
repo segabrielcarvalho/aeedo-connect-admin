@@ -9,18 +9,21 @@ BOLD='\033[1m'
 ITALIC='\033[3m'
 RESET='\033[0m'
 
+if [ -z "$BASH_VERSION" ]; then
+  echo -e "${RED}Este script deve ser executado em um ambiente Bash.${RESET}"
+  exit 1
+fi
+
 echo ""
 echo -e "${BOLD}${CYAN}Aeedo-Connect Docker Setup${RESET}"
 
-if ! command -v docker &> /dev/null; then
-  echo -e "${RED}🚨 Docker não encontrado. Instale o Docker para continuar.${RESET}"
-  exit 1
-fi
-
-if ! command -v docker-compose &> /dev/null; then
-  echo -e "${RED}🚨 Docker Compose não encontrado. Instale o Docker Compose para continuar.${RESET}"
-  exit 1
-fi
+DEPENDENCIES=(git docker docker-compose)
+for dep in "${DEPENDENCIES[@]}"; do
+  if ! command -v $dep &> /dev/null; then
+    echo -e "${RED}Dependência '${dep}' não encontrada. Por favor, instale '${dep}' e tente novamente.${RESET}"
+    exit 1
+  fi
+done
 
 if [ ! -f .env ]; then
   echo -e "${RED}🚨 Arquivo .env não encontrado na raiz do projeto. Certifique-se de configurá-lo antes de continuar.${RESET}"
@@ -59,7 +62,7 @@ if [ ! -d "apps" ]; then
   mkdir -p apps || { echo -e "${RED}Erro ao criar a pasta 'apps'. Encerrando.${RESET}"; exit 1; }
 fi
 
-cd apps || exit
+cd apps || exit 1
 
 echo -e "${CYAN}Clonando os repositórios...${RESET}"
 repos=(
@@ -79,7 +82,57 @@ for repo in "${repos[@]}"; do
   fi
 done
 
-cd .. || exit
+apps=(
+  "aeedo-connect-api"
+  "aeedo-connect-web"
+  "aeedo-connect-doc"
+  "aeedo-connect-admin"
+)
+
+envExamples=(
+  "../envs/.env.api.example"
+  "../envs/.env.web.example"
+  "../envs/.env.doc.example"
+  "../envs/.env.admin.example"
+)
+
+for i in "${!apps[@]}"; do
+  app="${apps[i]}"
+  env="${envExamples[i]}"
+
+  echo -e "${YELLOW}Configurando ${app}...${RESET}"
+
+  cd "$app" || exit 1
+
+  if [ "$app" = "aeedo-connect-api" ]; then
+    if [ ! -f .env ]; then
+      cp "$env" .env || { echo -e "${RED}Erro ao copiar o arquivo .env para ${app}.${RESET}"; exit 1; }
+      echo -e "${GREEN}.env configurado para ${app}.${RESET}"
+    else
+      echo -e "${GREEN}Arquivo .env já existe para ${app}. Pulando cópia.${RESET}"
+    fi
+
+    echo -e "${CYAN}Instalando dependências do Composer via Docker...${RESET}"
+    docker run --rm \
+      -u "$(id -u):$(id -g)" \
+      -v "$(pwd):/var/www/html" \
+      -w /var/www/html \
+      laravelsail/php82-composer:latest \
+      composer install --ignore-platform-reqs || { echo -e "${RED}Erro ao instalar dependências do Composer.${RESET}"; exit 1; }
+
+  else
+    if [ ! -f .env.local ]; then
+      cp "$env" .env.local || { echo -e "${RED}Erro ao copiar o arquivo .env.local para ${app}.${RESET}"; exit 1; }
+      echo -e "${GREEN}.env.local configurado para ${app}.${RESET}"
+    else
+      echo -e "${GREEN}Arquivo .env.local já existe para ${app}. Pulando cópia.${RESET}"
+    fi
+  fi
+
+  cd ..
+done
+
+cd ..
 
 if [ ${#profiles[@]} -eq 0 ]; then
   echo -e "${RED}🚨 Nenhum perfil habilitado no .env. Apenas serviços fora de perfis serão iniciados.${RESET}"
@@ -88,6 +141,15 @@ else
 fi
 
 docker-compose $profile_args up --build -d || { echo -e "${RED}Erro ao iniciar os containers com o Docker Compose.${RESET}"; exit 1; }
+
+if [ "$START_API" = "true" ]; then
+  echo -e "${CYAN}Aguardando o serviço da API iniciar...${RESET}"
+  sleep 15 
+
+  echo -e "${CYAN}Executando migrações e seeders para a API...${RESET}"
+  docker-compose exec api sail artisan migrate || { echo -e "${RED}Erro ao executar migrações.${RESET}"; exit 1; }
+  docker-compose exec api sail artisan db:seed || { echo -e "${RED}Erro ao executar seeders.${RESET}"; exit 1; }
+fi
 
 echo ""
 echo -e "${GREEN}Serviços iniciados com sucesso! Acesse os serviços abaixo:${RESET}"

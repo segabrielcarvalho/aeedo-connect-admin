@@ -9,8 +9,21 @@ BOLD='\033[1m'
 ITALIC='\033[3m'
 RESET='\033[0m'
 
+if [ -z "$BASH_VERSION" ]; then
+  echo -e "${RED}Este script deve ser executado em um ambiente Bash.${RESET}"
+  exit 1
+fi
+
 echo ""
 echo -e "${BOLD}${CYAN}Aeedo-Connect Setup Local${RESET}"
+
+DEPENDENCIES=(git)
+for dep in "${DEPENDENCIES[@]}"; do
+  if ! command -v $dep &> /dev/null; then
+    echo -e "${RED}Dependência '${dep}' não encontrada. Por favor, instale '${dep}' e tente novamente.${RESET}"
+    exit 1
+  fi
+done
 
 echo ""
 echo -e "${YELLOW}Qual gerenciador de pacotes deseja usar para instalar as dependências?${RESET}"
@@ -24,17 +37,17 @@ case $packageManager in
   1)
     packageCommand="npm install"
     buildCommand="npm run build"
-    runCommand="npm run start"
+    runCommand="npm run dev"
     ;;
   2)
     packageCommand="yarn"
     buildCommand="yarn build"
-    runCommand="yarn start"
+    runCommand="yarn dev"
     ;;
   3)
     packageCommand="pnpm install"
     buildCommand="pnpm build"
-    runCommand="pnpm start"
+    runCommand="pnpm dev"
     ;;
   *)
     echo -e "${RED}Opção inválida. Encerrando o setup.${RESET}"
@@ -42,21 +55,25 @@ case $packageManager in
     ;;
 esac
 
+if ! command -v ${packageCommand%% *} &> /dev/null; then
+  echo -e "${RED}Gerenciador de pacotes '${packageCommand%% *}' não encontrado. Por favor, instale-o antes de continuar.${RESET}"
+  exit 1
+fi
+
 if [ -d "apps" ]; then
   echo -e "${YELLOW}A pasta 'apps' já existe. Deseja removê-la e começar do zero? (s/n)${RESET}"
   read -rp "Sua escolha: " removeApps
 
-  if [[ $removeApps == "s" || $removeApps == "S" ]]; then
+  if [[ $removeApps =~ ^[sS]$ ]]; then
     echo -e "${CYAN}Removendo a pasta 'apps'...${RESET}"
     rm -rf apps || { echo -e "${RED}Erro ao remover a pasta 'apps'. Encerrando.${RESET}"; exit 1; }
   else
-    echo -e "${RED}Ação cancelada pelo usuário. Encerrando.${RESET}"
-    exit 1
+    echo -e "${YELLOW}Continuando com a pasta 'apps' existente.${RESET}"
   fi
 fi
 
 mkdir -p apps || { echo -e "${RED}Erro ao criar a pasta 'apps'. Encerrando.${RESET}"; exit 1; }
-cd apps || exit
+cd apps || exit 1
 
 repos=(
   "git@github.com:segabrielcarvalho/aeedo-connect-api.git"
@@ -67,8 +84,13 @@ repos=(
 
 echo -e "${CYAN}Clonando os repositórios...${RESET}"
 for repo in "${repos[@]}"; do
-  echo -e "${YELLOW}Clonando ${repo}...${RESET}"
-  git clone "$repo" || { echo -e "${RED}Erro ao clonar ${repo}. Verifique sua conexão ou permissões do Git.${RESET}"; exit 1; }
+  repo_name=$(basename "$repo" .git)
+  if [ ! -d "$repo_name" ]; then
+    echo -e "${YELLOW}Clonando ${repo}...${RESET}"
+    git clone "$repo" || { echo -e "${RED}Erro ao clonar ${repo}. Verifique sua conexão ou permissões do Git.${RESET}"; exit 1; }
+  else
+    echo -e "${GREEN}Repositório ${repo_name} já existe. Pulando clonagem.${RESET}"
+  fi
 done
 
 apps=(
@@ -85,10 +107,29 @@ envExamples=(
   "../../envs/.env.admin.example"
 )
 
+if [ ! -f "../.env" ]; then
+  echo -e "${RED}Erro: Arquivo .env não encontrado na raiz do projeto. Certifique-se de que ele exista e contenha as variáveis necessárias.${RESET}"
+  exit 1
+fi
+
+echo -e "${CYAN}Carregando variáveis de ambiente do .env...${RESET}"
+set -a
+source ../.env
+set +a
+
 if [ -z "$PORT_API" ] || [ -z "$PORT_WEB" ] || [ -z "$PORT_DOC" ] || [ -z "$PORT_ADMIN" ]; then
   echo -e "${RED}Erro: Certifique-se de que as variáveis PORT_API, PORT_WEB, PORT_DOC, e PORT_ADMIN estejam definidas no arquivo .env.${RESET}"
   exit 1
 fi
+
+function is_port_in_use() {
+  local port=$1
+  if lsof -i :"$port" &> /dev/null; then
+    return 0
+  else
+    return 1
+  fi
+}
 
 for i in "${!apps[@]}"; do
   app="${apps[i]}"
@@ -96,33 +137,93 @@ for i in "${!apps[@]}"; do
 
   echo -e "${YELLOW}Configurando ${app}...${RESET}"
 
-  cd "$app" || exit
+  cd "$app" || exit 1
 
-  if [ "$app" = "aeedo-connect-api" ]; then
-    cp "$env" .env || { echo -e "${RED}Erro ao copiar o arquivo .env para ${app}.${RESET}"; exit 1; }
-    echo -e "${GREEN}.env configurado para ${app}.${RESET}"
-  else
-    cp "$env" .env.local || { echo -e "${RED}Erro ao copiar o arquivo .env.local para ${app}.${RESET}"; exit 1; }
-    echo -e "${GREEN}.env.local configurado para ${app}.${RESET}"
-  fi
-
-  echo -e "${CYAN}Instalando dependências para ${app}...${RESET}"
-  $packageCommand || { echo -e "${RED}Erro ao instalar dependências para ${app}. Verifique o gerenciador de pacotes.${RESET}"; exit 1; }
-
-  if [ "$app" = "aeedo-connect-api" ]; then
-    echo -e "${CYAN}Configurando e iniciando o Laravel para ${app}...${RESET}"
-    if ! command -v composer &> /dev/null; then
-      echo -e "${RED}Composer não encontrado. Instale o Composer para continuar.${RESET}"
+if [ "$app" = "aeedo-connect-api" ]; then
+    if ! command -v docker &> /dev/null; then
+      echo -e "${RED}Docker não encontrado. Instale o Docker para continuar.${RESET}"
       exit 1
     fi
-    composer install || { echo -e "${RED}Erro ao instalar dependências do Composer.${RESET}"; exit 1; }
-    php artisan key:generate || { echo -e "${RED}Erro ao gerar chave do Laravel.${RESET}"; exit 1; }
-    php artisan migrate --force || { echo -e "${RED}Erro ao executar migrações do Laravel.${RESET}"; exit 1; }
-    php artisan serve --host=0.0.0.0 --port="${PORT_API}" > laravel.log 2>&1 &
+
+    if [ ! -f .env ]; then
+      cp "$env" .env || { echo -e "${RED}Erro ao copiar o arquivo .env para ${app}.${RESET}"; exit 1; }
+      echo -e "${GREEN}.env configurado para ${app}.${RESET}"
+    else
+      echo -e "${YELLOW}Arquivo .env já existe para ${app}. Deseja sobrescrevê-lo? (s/n)${RESET}"
+      read -rp "Sua escolha: " overwriteEnv
+      if [[ $overwriteEnv =~ ^[sS]$ ]]; then
+        cp "$env" .env || { echo -e "${RED}Erro ao copiar o arquivo .env para ${app}.${RESET}"; exit 1; }
+        echo -e "${GREEN}.env sobrescrito para ${app}.${RESET}"
+      else
+        echo -e "${YELLOW}Mantendo o arquivo .env existente para ${app}.${RESET}"
+      fi
+    fi
+
+    echo -e "${CYAN}Instalando dependências do Composer via Docker...${RESET}"
+    docker run --rm \
+      -u "$(id -u):$(id -g)" \
+      -v "$(pwd):/var/www/html" \
+      -w /var/www/html \
+      laravelsail/php84-composer:latest \
+      composer install --ignore-platform-reqs || { echo -e "${RED}Erro ao instalar dependências do Composer.${RESET}"; exit 1; }
+
+    chmod +x vendor/bin/sail
+
+    echo -e "${CYAN}Parando e removendo containers e volumes existentes...${RESET}"
+    ./vendor/bin/sail down -v
+
+    echo -e "${CYAN}Iniciando os containers com o Sail...${RESET}"
+    ./vendor/bin/sail up -d || { echo -e "${RED}Erro ao iniciar os containers com o Sail.${RESET}"; exit 1; }
+
+    echo -e "${CYAN}Aguardando o banco de dados estar pronto...${RESET}"
+    MAX_RETRIES=60
+    RETRIES=0
+
+    while ! ./vendor/bin/sail exec mysql mysqladmin ping -h "${DB_HOST}" -u "${DB_USERNAME}" --password="${DB_PASSWORD}" --silent; do
+      RETRIES=$((RETRIES + 1))
+      if [ $RETRIES -ge $MAX_RETRIES ]; then
+        echo -e "${RED}Banco de dados não ficou pronto a tempo. Verifique a configuração e tente novamente.${RESET}"
+        exit 1
+      fi
+      echo -e "${YELLOW}Banco de dados ainda não está pronto. Tentativa $RETRIES/${MAX_RETRIES}...${RESET}"
+      sleep 2
+    done
+
+    echo -e "${GREEN}Banco de dados está pronto! Continuando...${RESET}"
+    echo -e "${CYAN}Limpando cache de configuração e aplicação...${RESET}"
+    ./vendor/bin/sail artisan config:clear || { echo -e "${RED}Erro ao limpar cache de configuração.${RESET}"; exit 1; }
+    ./vendor/bin/sail artisan cache:clear || { echo -e "${RED}Erro ao limpar cache de aplicação.${RESET}"; exit 1; }
+
+    # Run migrations
+    echo -e "${CYAN}Executando migrações...${RESET}"
+    ./vendor/bin/sail artisan migrate --force || { echo -e "${RED}Erro ao executar migrações.${RESET}"; exit 1; }
+
+    # Run seeders
+    echo -e "${CYAN}Executando seeders...${RESET}"
+    ./vendor/bin/sail artisan db:seed --force || { echo -e "${RED}Erro ao executar seeders.${RESET}"; exit 1; }
+
   else
+    if [ ! -f .env.local ]; then
+      cp "$env" .env.local || { echo -e "${RED}Erro ao copiar o arquivo .env.local para ${app}.${RESET}"; exit 1; }
+      echo -e "${GREEN}.env.local configurado para ${app}.${RESET}"
+    else
+      echo -e "${GREEN}Arquivo .env.local já existe para ${app}. Pulando cópia.${RESET}"
+    fi
+
+    echo -e "${CYAN}Instalando dependências para ${app}...${RESET}"
+    $packageCommand || { echo -e "${RED}Erro ao instalar dependências para ${app}. Verifique o gerenciador de pacotes.${RESET}"; exit 1; }
+
+    APP_PORT_VAR="PORT_${app^^}"
+    APP_PORT=${!APP_PORT_VAR}
+    if is_port_in_use "$APP_PORT"; then
+      echo -e "${RED}A porta ${APP_PORT} já está em uso. Por favor, libere a porta ou altere a configuração.${RESET}"
+      exit 1
+    fi
+
     echo -e "${CYAN}Construindo e iniciando o ${app}...${RESET}"
     $buildCommand || { echo -e "${RED}Erro ao construir o ${app}.${RESET}"; exit 1; }
-    $runCommand > nextjs_${app}.log 2>&1 &
+    nohup $runCommand > "../../logs/${app}.log" 2>&1 &
+
   fi
 
   cd ..

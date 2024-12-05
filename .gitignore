@@ -1,2 +1,6 @@
 /apps/*
 .env
+/apps/aeedo-connect-api
+
+apps/*
+apps
