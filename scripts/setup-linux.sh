@@ -15,7 +15,7 @@ if [ -z "$BASH_VERSION" ]; then
 fi
 
 echo ""
-echo -e "${BOLD}${CYAN}Aeedo-Connect Setup Local${RESET}"
+echo -e "${BOLD}${CYAN}Aeedo-Connect Setup${RESET}"
 
 DEPENDENCIES=(git)
 for dep in "${DEPENDENCIES[@]}"; do
@@ -36,18 +36,12 @@ read -rp "Escolha sua opção (1, 2, 3): " packageManager
 case $packageManager in
   1)
     packageCommand="npm install"
-    buildCommand="npm run build"
-    runCommand="npm run dev"
     ;;
   2)
     packageCommand="yarn"
-    buildCommand="yarn build"
-    runCommand="yarn dev"
     ;;
   3)
     packageCommand="pnpm install"
-    buildCommand="pnpm build"
-    runCommand="pnpm dev"
     ;;
   *)
     echo -e "${RED}Opção inválida. Encerrando o setup.${RESET}"
@@ -107,21 +101,6 @@ envExamples=(
   "../../envs/.env.admin.example"
 )
 
-if [ ! -f "../.env" ]; then
-  echo -e "${RED}Erro: Arquivo .env não encontrado na raiz do projeto. Certifique-se de que ele exista e contenha as variáveis necessárias.${RESET}"
-  exit 1
-fi
-
-echo -e "${CYAN}Carregando variáveis de ambiente do .env...${RESET}"
-set -a
-source ../.env
-set +a
-
-if [ -z "$PORT_API" ] || [ -z "$PORT_WEB" ] || [ -z "$PORT_DOC" ] || [ -z "$PORT_ADMIN" ]; then
-  echo -e "${RED}Erro: Certifique-se de que as variáveis PORT_API, PORT_WEB, PORT_DOC, e PORT_ADMIN estejam definidas no arquivo .env.${RESET}"
-  exit 1
-fi
-
 function is_port_in_use() {
   local port=$1
   if lsof -i :"$port" &> /dev/null; then
@@ -131,6 +110,8 @@ function is_port_in_use() {
   fi
 }
 
+declare -a APP_PORTS
+
 for i in "${!apps[@]}"; do
   app="${apps[i]}"
   env="${envExamples[i]}"
@@ -139,7 +120,7 @@ for i in "${!apps[@]}"; do
 
   cd "$app" || exit 1
 
-if [ "$app" = "aeedo-connect-api" ]; then
+  if [ "$app" = "aeedo-connect-api" ]; then
     if ! command -v docker &> /dev/null; then
       echo -e "${RED}Docker não encontrado. Instale o Docker para continuar.${RESET}"
       exit 1
@@ -158,6 +139,26 @@ if [ "$app" = "aeedo-connect-api" ]; then
         echo -e "${YELLOW}Mantendo o arquivo .env existente para ${app}.${RESET}"
       fi
     fi
+
+    if [ ! -f .env ]; then
+      echo -e "${RED}Erro: Arquivo .env não encontrado para ${app}.${RESET}"
+      exit 1
+    fi
+
+    APP_PORT=$(grep -E "^APP_PORT=" .env | cut -d '=' -f2-)
+
+    if [ -z "$APP_PORT" ]; then
+      echo -e "${RED}Erro: Variável APP_PORT não encontrada no arquivo .env de ${app}.${RESET}"
+      exit 1
+    fi
+
+    if is_port_in_use "$APP_PORT"; then
+      echo -e "${RED}A porta ${APP_PORT} já está em uso. Por favor, libere a porta ou altere a configuração.${RESET}"
+      exit 1
+    fi
+
+    echo -e "${CYAN}Atualizando docker-compose.yml para mapear a porta ${APP_PORT}...${RESET}"
+    sed -i.bak "s/80:80/${APP_PORT}:80/g" docker-compose.yml || { echo -e "${RED}Erro ao atualizar docker-compose.yml.${RESET}"; exit 1; }
 
     echo -e "${CYAN}Instalando dependências do Composer via Docker...${RESET}"
     docker run --rm \
@@ -179,6 +180,10 @@ if [ "$app" = "aeedo-connect-api" ]; then
     MAX_RETRIES=60
     RETRIES=0
 
+    DB_HOST=$(grep -E "^DB_HOST=" .env | cut -d '=' -f2-)
+    DB_USERNAME=$(grep -E "^DB_USERNAME=" .env | cut -d '=' -f2-)
+    DB_PASSWORD=$(grep -E "^DB_PASSWORD=" .env | cut -d '=' -f2-)
+
     while ! ./vendor/bin/sail exec mysql mysqladmin ping -h "${DB_HOST}" -u "${DB_USERNAME}" --password="${DB_PASSWORD}" --silent; do
       RETRIES=$((RETRIES + 1))
       if [ $RETRIES -ge $MAX_RETRIES ]; then
@@ -194,13 +199,13 @@ if [ "$app" = "aeedo-connect-api" ]; then
     ./vendor/bin/sail artisan config:clear || { echo -e "${RED}Erro ao limpar cache de configuração.${RESET}"; exit 1; }
     ./vendor/bin/sail artisan cache:clear || { echo -e "${RED}Erro ao limpar cache de aplicação.${RESET}"; exit 1; }
 
-    # Run migrations
     echo -e "${CYAN}Executando migrações...${RESET}"
     ./vendor/bin/sail artisan migrate --force || { echo -e "${RED}Erro ao executar migrações.${RESET}"; exit 1; }
 
-    # Run seeders
     echo -e "${CYAN}Executando seeders...${RESET}"
     ./vendor/bin/sail artisan db:seed --force || { echo -e "${RED}Erro ao executar seeders.${RESET}"; exit 1; }
+
+    APP_PORTS+=("$app|$APP_PORT")
 
   else
     if [ ! -f .env.local ]; then
@@ -210,20 +215,22 @@ if [ "$app" = "aeedo-connect-api" ]; then
       echo -e "${GREEN}Arquivo .env.local já existe para ${app}. Pulando cópia.${RESET}"
     fi
 
-    echo -e "${CYAN}Instalando dependências para ${app}...${RESET}"
-    $packageCommand || { echo -e "${RED}Erro ao instalar dependências para ${app}. Verifique o gerenciador de pacotes.${RESET}"; exit 1; }
+    APP_PORT=$(grep -E "^PORT=" .env.local | cut -d '=' -f2-)
 
-    APP_PORT_VAR="PORT_${app^^}"
-    APP_PORT=${!APP_PORT_VAR}
+    if [ -z "$APP_PORT" ]; then
+      echo -e "${RED}Erro: Variável PORT não encontrada no arquivo .env.local de ${app}.${RESET}"
+      exit 1
+    fi
+
     if is_port_in_use "$APP_PORT"; then
       echo -e "${RED}A porta ${APP_PORT} já está em uso. Por favor, libere a porta ou altere a configuração.${RESET}"
       exit 1
     fi
 
-    echo -e "${CYAN}Construindo e iniciando o ${app}...${RESET}"
-    $buildCommand || { echo -e "${RED}Erro ao construir o ${app}.${RESET}"; exit 1; }
-    nohup $runCommand > "../../logs/${app}.log" 2>&1 &
+    echo -e "${CYAN}Instalando dependências para ${app}...${RESET}"
+    $packageCommand || { echo -e "${RED}Erro ao instalar dependências para ${app}. Verifique o gerenciador de pacotes.${RESET}"; exit 1; }
 
+    APP_PORTS+=("$app|$APP_PORT")
   fi
 
   cd ..
@@ -231,18 +238,27 @@ done
 
 echo ""
 echo -e "${GREEN}Serviços iniciados com sucesso! Acesse os serviços abaixo:${RESET}"
-if [ "$START_WEB" = "true" ]; then
-  echo -e "🌐 ${CYAN}Web:${RESET} http://localhost:${PORT_WEB}"
-fi
-if [ "$START_DOC" = "true" ]; then
-  echo -e "📄 ${CYAN}Documentação:${RESET} http://localhost:${PORT_DOC}"
-fi
-if [ "$START_ADMIN" = "true" ]; then
-  echo -e "🛠️ ${CYAN}Admin:${RESET} http://localhost:${PORT_ADMIN}"
-fi
-if [ "$START_API" = "true" ]; then
-  echo -e "⚙️ ${CYAN}API:${RESET} http://localhost:${PORT_API}"
-fi
+
+for app_port in "${APP_PORTS[@]}"; do
+  IFS='|' read -r app_name app_port_num <<< "$app_port"
+  case "$app_name" in
+    "aeedo-connect-web")
+      echo -e "🌐 ${CYAN}Web:${RESET} http://localhost:${app_port_num}"
+      ;;
+    "aeedo-connect-doc")
+      echo -e "📄 ${CYAN}Documentação:${RESET} http://localhost:${app_port_num}"
+      ;;
+    "aeedo-connect-admin")
+      echo -e "🛠️ ${CYAN}Admin:${RESET} http://localhost:3003"
+      ;;
+    "aeedo-connect-api")
+      echo -e "⚙️ ${CYAN}API:${RESET} http://localhost:${app_port_num}"
+      ;;
+    *)
+      echo -e "${CYAN}${app_name}:${RESET} http://localhost:${app_port_num}"
+      ;;
+  esac
+done
 
 echo ""
 echo -e "${BOLD}${GREEN}Setup local concluído com sucesso! 🚀${RESET}"
