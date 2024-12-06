@@ -10,7 +10,7 @@ interface LazyAxiosReturn<T> {
 
 type LazyAxiosExecute<T> = (
   config: AxiosRequestConfig
-) => Promise<AxiosResponse<T> | void>;
+) => Promise<AxiosResponse<T>>;
 
 export function useLazyAxios<T = any>(): [
   LazyAxiosExecute<T>,
@@ -29,6 +29,7 @@ export function useLazyAxios<T = any>(): [
       return response;
     } catch (err: any) {
       setError(err);
+      throw err;
     } finally {
       setIsLoading(false);
     }
