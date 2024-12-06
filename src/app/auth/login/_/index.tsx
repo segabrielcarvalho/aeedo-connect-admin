@@ -1,8 +1,7 @@
-import Button from "@/components/Button";
-import { Input } from "@/components/Form/Input";
 import { Logo } from "@/components/Logo";
 import routes from "@/routes";
 import NextLink from "next/link";
+import { LoginForm } from "./components/LoginForm";
 
 export const Login = () => {
   return (
@@ -24,28 +23,7 @@ export const Login = () => {
         </p>
       </div>
 
-      <div className="mt-10">
-        <div>
-          <form action="#" method="POST" className="space-y-6">
-            <Input label="Email" name="email" />
-            <Input label="Senha" name="password" />
-
-            <div className="flex items-center justify-end">
-              <div className="text-sm/6">
-                <NextLink
-                  href="#"
-                  className="font-medium text-secondary-300 hover:text-secondary-400"
-                >
-                  Esqueceu sua senha?
-                </NextLink>
-              </div>
-            </div>
-            <Button className="w-full" color="secondary" variant="solid">
-              Entrar
-            </Button>
-          </form>
-        </div>
-      </div>
+      <LoginForm />
     </div>
   );
 };

@@ -24,8 +24,8 @@ export function useLazyAxios<T = any>(): [
   const execute: LazyAxiosExecute<T> = useCallback(async (config) => {
     setIsLoading(true);
     try {
-      const response: AxiosResponse<T> = await apiClient(config);
-      setData(response.data);
+      const response = await apiClient(config);
+      setData(response.data.data);
       setError(null);
       return response;
     } catch (err: any) {

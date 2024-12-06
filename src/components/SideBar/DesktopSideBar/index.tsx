@@ -6,7 +6,7 @@ import { ArrowLeftStartOnRectangleIcon } from "@heroicons/react/24/outline";
 import { navigation } from "../constants";
 
 const DesktopSideBar = () => {
-  const { user } = useAuthContext();
+  const { user, signOut } = useAuthContext();
 
   return (
     <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
@@ -52,16 +52,16 @@ const DesktopSideBar = () => {
                 <span aria-hidden="true">{user?.name}</span>
               </a>
 
-              <a
-                href="/dashboard/me"
-                className="flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold  hover:bg-gray-50 text-gray-400 hover:text-primary-default"
+              <span
+                onClick={signOut}
+                className="cursor-pointer flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold  hover:bg-gray-50 text-gray-400 hover:text-primary-default"
               >
                 <ArrowLeftStartOnRectangleIcon
                   aria-hidden="true"
                   className="size-6 shrink-0  group-hover:text-primary-default hover:text-primary-default"
                 />
                 Sair
-              </a>
+              </span>
             </li>
           </ul>
         </nav>

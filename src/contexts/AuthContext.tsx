@@ -1,4 +1,3 @@
-// app/contexts/AuthContext.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -14,7 +13,9 @@ import {
 } from "react";
 import { useLazyAxios } from "../hooks/useLazyAxios";
 import useLocalStorageState from "../hooks/useLocalStorageState";
+import useToastHook from "../hooks/useToastHook";
 import routes from "../routes";
+import apiRoutes from "../routes/api";
 import apiClient from "../services/axiosClient";
 
 enum Role {
@@ -23,18 +24,19 @@ enum Role {
 }
 
 export interface User {
-  id: string;
-  patientId: string;
-  name: string;
-  email: string;
-  role: Role;
-  document: string | null;
-  birthDate: string | null;
-  isActive: boolean;
+  id?: string;
+  patientId?: string;
+  name?: string;
+  email?: string;
+  role?: Role;
+  document?: string | null;
+  birthDate?: string | null;
+  isActive?: boolean;
 }
 
 interface LoginOutput {
   success: boolean;
+  message?: string;
   data: {
     token_type: string;
     access_token: string;
@@ -51,19 +53,19 @@ type AuthContextData = {
   isLoadingUser: boolean;
   signIn: (credentials: { email: string; password: string }) => Promise<void>;
   signOut: () => void;
-  fetchUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const { success, error } = useToastHook();
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const router = useRouter();
 
-  const [executeFetchUser, fetchUserState] = useLazyAxios<User>();
-  const [executeSignIn, signInState] = useLazyAxios<LoginOutput>();
-  const [executeSignOut, signOutState] = useLazyAxios();
+  const [executeFetchUser, { data: userData }] = useLazyAxios<User>();
+  const [executeSignIn] = useLazyAxios<LoginOutput>();
+  const [executeSignOut] = useLazyAxios();
 
   const [storedSub, setStoredSub] = useLocalStorageState<string>({
     key: "auth-sub",
@@ -85,43 +87,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const isInitialized = useRef(false);
 
-  const fetchUser = useCallback(async () => {
-    setIsLoadingUser(true);
-    try {
-      const response = await executeFetchUser({
-        url: "/me",
-        method: "GET",
-      });
-      if (response && response.data) {
-        setUser(response.data);
-        setStoredSub(response.data.id);
-        setStoredRole(response.data.role);
-        setStoredName(response.data.name);
-      } else {
-        throw new Error("Usuário não encontrado");
-      }
-    } catch (error) {
-      console.error("Erro ao buscar usuário:", error);
-      setUser(null);
-      setStoredSub("");
-      setStoredRole(Role.USER);
-      setStoredName("");
-    } finally {
-      setIsLoadingUser(false);
-    }
-  }, [executeFetchUser, setStoredSub, setStoredRole, setStoredName]);
-
   const signIn = useCallback(
     async ({ email, password }: { email: string; password: string }) => {
       setIsLoadingUser(true);
       try {
         const response = await executeSignIn({
-          url: "/login",
+          url: apiRoutes.auth.login.path,
           method: "POST",
           data: { email, password },
         });
 
-        if (response && response.data.success) {
+        if (response?.data?.success) {
           const { token_type, access_token, sub, role, name } =
             response.data.data;
 
@@ -129,24 +105,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
           });
-
           nookies.set(null, "token_type", token_type, {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
           });
 
-          setStoredSub(sub);
-          setStoredRole(role);
-          setStoredName(name);
-
           apiClient.defaults.headers.Authorization = `${token_type} ${access_token}`;
-          await fetchUser();
+          const userResponse = await executeFetchUser({
+            url: apiRoutes.auth.me.path,
+            method: "GET",
+          });
+
+          if (userResponse?.data) {
+            setUser({
+              id: sub,
+              patientId: userData?.patientId,
+              name: userData?.name,
+              email: userData?.email,
+              role: userData?.role,
+              document: userData?.document,
+              birthDate: userData?.birthDate,
+              isActive: userData?.isActive,
+            });
+
+            setStoredSub(sub);
+            setStoredRole(role);
+            setStoredName(name);
+          }
+
+          success({ message: "Login efetuado com sucesso!" });
           router.push(routes.home.path);
-        } else {
-          throw new Error("Login falhou");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Erro ao fazer login", err);
+        const errorMessage =
+          err?.response?.data?.message || "Erro ao fazer login";
+        error({ message: errorMessage });
+
         setUser(null);
         setStoredSub("");
         setStoredRole(Role.USER);
@@ -157,11 +152,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     },
     [
       executeSignIn,
+      executeFetchUser,
       router,
       setStoredSub,
       setStoredRole,
       setStoredName,
-      fetchUser,
+      success,
+      error,
     ]
   );
 
@@ -169,7 +166,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoadingUser(true);
     try {
       await executeSignOut({
-        url: "/logout",
+        url: apiRoutes.auth.logout.path,
         method: "POST",
       });
     } catch (err) {
@@ -196,7 +193,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (token) {
         apiClient.defaults.headers.Authorization = `${cookies.token_type} ${token}`;
-        await fetchUser();
+        try {
+          const userResponse = await executeFetchUser({
+            url: apiRoutes.auth.me.path,
+            method: "GET",
+          });
+
+          if (userResponse?.data) {
+            setUser({
+              id: userData?.id,
+              patientId: userData?.patientId,
+              name: userData?.name,
+              email: userData?.email,
+              role: userData?.role,
+              document: userData?.document,
+              birthDate: userData?.birthDate,
+              isActive: userData?.isActive,
+            });
+
+            setStoredSub(userData?.id || "");
+            setStoredRole(userData?.role || Role.USER);
+            setStoredName(userData?.name || "");
+          }
+        } catch (err) {
+          console.error("Erro ao buscar usuário:", err);
+          setUser(null);
+          setStoredSub("");
+          setStoredRole(Role.USER);
+          setStoredName("");
+        } finally {
+          setIsLoadingUser(false);
+        }
       } else {
         const sub = storedSub;
         const role = storedRole;
@@ -223,12 +250,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isInitialized.current = true;
       initializeAuth();
     }
-  }, [fetchUser, storedSub, storedRole, storedName]);
+  }, [executeFetchUser, storedSub, storedRole, storedName]);
 
   return (
-    <AuthContext.Provider
-      value={{ user, isLoadingUser, signIn, signOut, fetchUser }}
-    >
+    <AuthContext.Provider value={{ user, isLoadingUser, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
