@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useAxios } from "../hooks/useAxios";
 import { useLazyAxios } from "../hooks/useLazyAxios";
 import useLocalStorageState from "../hooks/useLocalStorageState";
 import useToastHook from "../hooks/useToastHook";
@@ -47,7 +48,6 @@ interface LoginOutput {
 }
 
 type AuthProviderProps = { children: ReactNode };
-
 type AuthContextData = {
   user: User | null;
   isLoadingUser: boolean;
@@ -63,7 +63,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const router = useRouter();
 
-  const [executeFetchUser, { data: userData }] = useLazyAxios<User>();
+  const {
+    data: userData,
+    error: userError,
+    isLoading: userDataLoading,
+  } = useAxios<User>({
+    url: apiRoutes.auth.me.path,
+    method: "GET",
+  });
+
   const [executeSignIn] = useLazyAxios<LoginOutput>();
   const [executeSignOut] = useLazyAxios();
 
@@ -100,7 +108,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (response?.data?.success) {
           const { token_type, access_token, sub, role, name } =
             response.data.data;
-
           nookies.set(null, "access_token", access_token, {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
@@ -111,33 +118,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           });
 
           apiClient.defaults.headers.Authorization = `${token_type} ${access_token}`;
-          const userResponse = await executeFetchUser({
-            url: apiRoutes.auth.me.path,
-            method: "GET",
-          });
 
-          if (userResponse?.data) {
-            setUser({
-              id: sub,
-              patientId: userData?.patientId,
-              name: userData?.name,
-              email: userData?.email,
-              role: userData?.role,
-              document: userData?.document,
-              birthDate: userData?.birthDate,
-              isActive: userData?.isActive,
-            });
-
-            setStoredSub(sub);
-            setStoredRole(role);
-            setStoredName(name);
-          }
+          setStoredSub(sub);
+          setStoredRole(role);
+          setStoredName(name);
 
           success({ message: "Login efetuado com sucesso!" });
           router.push(routes.home.path);
         }
       } catch (err: any) {
-        console.error("Erro ao fazer login", err);
         const errorMessage =
           err?.response?.data?.message || "Erro ao fazer login";
         error({ message: errorMessage });
@@ -152,7 +141,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     },
     [
       executeSignIn,
-      executeFetchUser,
       router,
       setStoredSub,
       setStoredRole,
@@ -169,8 +157,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         url: apiRoutes.auth.logout.path,
         method: "POST",
       });
-    } catch (err) {
-      console.error("Erro ao fazer logout", err);
     } finally {
       nookies.destroy(null, "access_token");
       nookies.destroy(null, "token_type");
@@ -178,7 +164,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setStoredSub("");
       setStoredRole(Role.USER);
       setStoredName("");
-
       setUser(null);
 
       router.push(routes.auth.login.path);
@@ -187,70 +172,60 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [executeSignOut, router, setStoredSub, setStoredRole, setStoredName]);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const cookies = nookies.get(null);
-      const token = cookies.access_token;
+    const cookies = nookies.get(null);
+    const token = cookies.access_token;
 
-      if (token) {
-        apiClient.defaults.headers.Authorization = `${cookies.token_type} ${token}`;
-        try {
-          const userResponse = await executeFetchUser({
-            url: apiRoutes.auth.me.path,
-            method: "GET",
+    if (token) {
+      if (!userDataLoading) {
+        if (userData) {
+          setUser({
+            id: userData.id,
+            patientId: userData.patientId,
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+            document: userData.document,
+            birthDate: userData.birthDate,
+            isActive: userData.isActive,
           });
 
-          if (userResponse?.data) {
-            setUser({
-              id: userData?.id,
-              patientId: userData?.patientId,
-              name: userData?.name,
-              email: userData?.email,
-              role: userData?.role,
-              document: userData?.document,
-              birthDate: userData?.birthDate,
-              isActive: userData?.isActive,
-            });
-
-            setStoredSub(userData?.id || "");
-            setStoredRole(userData?.role || Role.USER);
-            setStoredName(userData?.name || "");
-          }
-        } catch (err) {
-          console.error("Erro ao buscar usuário:", err);
+          setStoredSub(userData.id || "");
+          setStoredRole(userData.role || Role.USER);
+          setStoredName(userData.name || "");
+        } else if (userError) {
           setUser(null);
           setStoredSub("");
           setStoredRole(Role.USER);
           setStoredName("");
-        } finally {
-          setIsLoadingUser(false);
         }
-      } else {
-        const sub = storedSub;
-        const role = storedRole;
-        const name = storedName;
-
-        if (sub && role && name) {
-          setUser({
-            id: sub,
-            patientId: "",
-            name,
-            email: "",
-            role,
-            document: null,
-            birthDate: null,
-            isActive: true,
-          });
-        }
-
         setIsLoadingUser(false);
       }
-    };
+    } else {
+      const sub = storedSub;
+      const role = storedRole;
+      const name = storedName;
 
+      if (sub && role && name) {
+        setUser({
+          id: sub,
+          patientId: "",
+          name,
+          email: "",
+          role,
+          document: null,
+          birthDate: null,
+          isActive: true,
+        });
+      }
+      setIsLoadingUser(false);
+    }
+  }, [userData, userError, userDataLoading, storedSub, storedRole, storedName]);
+
+  useEffect(() => {
     if (!isInitialized.current) {
       isInitialized.current = true;
-      initializeAuth();
     }
-  }, [executeFetchUser, storedSub, storedRole, storedName]);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, isLoadingUser, signIn, signOut }}>

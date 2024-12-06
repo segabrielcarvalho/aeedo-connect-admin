@@ -4,10 +4,13 @@ import Table from "@/components/Table";
 import UserProfile from "@/components/UserInfo";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
+import { useAuthContext } from "../../../../../contexts/AuthContext";
 import routes from "../../../../../routes";
 
 export const UsersTable = () => {
   const router = useRouter();
+  const { user } = useAuthContext();
+  console.log(user);
 
   return (
     <Table

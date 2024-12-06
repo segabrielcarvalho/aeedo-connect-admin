@@ -4,12 +4,11 @@ import { Input } from "@/components/Form/Input";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import NextLink from "next/link";
-import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { loginSchema, LoginSchema, LoginVariables } from "../dto";
 
 export const LoginForm = () => {
-  const { signIn } = useAuthContext();
+  const { signIn, isLoadingUser } = useAuthContext();
 
   const {
     register,
@@ -20,10 +19,7 @@ export const LoginForm = () => {
     defaultValues: { email: "", password: "" },
   });
 
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
   const onSubmit: SubmitHandler<LoginVariables> = async (data) => {
-    setIsSubmitting(true);
     try {
       await signIn(data);
     } catch (err: any) {
@@ -67,10 +63,10 @@ export const LoginForm = () => {
             className="w-full"
             color="secondary"
             variant="solid"
-            disabled={isSubmitting}
+            isLoading={isLoadingUser}
             onClick={handleSubmit(onSubmit)}
           >
-            {isSubmitting ? "Entrando..." : "Entrar"}
+            Entrar
           </Button>
         </div>
       </div>

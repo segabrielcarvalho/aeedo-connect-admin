@@ -24,35 +24,31 @@ export function useAxios<T = any>(
     abortController.current = new AbortController();
 
     try {
-      const response: AxiosResponse<T> = await apiClient({
+      const response = await apiClient({
         ...initialConfig,
         ...overrideConfig,
         signal: abortController.current.signal,
       });
-      setData(response.data);
+      setData(response.data.data);
       setError(null);
       return response;
     } catch (err: any) {
-      if (err.name === "CanceledError") {
-        console.log("Requisição cancelada", err.message);
-      } else {
-        setError(err);
-        throw err;
-      }
-      throw new Error("Unexpected error");
+      setError(err);
+      return Promise.reject(err);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData().catch(() => {});
 
     return () => {
       if (abortController.current) {
         abortController.current.abort();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { data, error, isLoading, refetch: fetchData };
