@@ -2,8 +2,10 @@
 import { Logo } from "@/components/Logo";
 import { useAuthContext } from "@/contexts/AuthContext";
 import classNames from "@/utils/classnames";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { TbLogout2 } from "react-icons/tb";
+import Can from "../../Can";
 import { navigation, secondaryNavigation } from "../constants";
 
 const DesktopSideBar = () => {
@@ -21,36 +23,38 @@ const DesktopSideBar = () => {
                 {navigation.map((item) => {
                   const isCurrent = pathname.startsWith(item.href);
                   return (
-                    <li key={item.name}>
-                      <a
-                        href={item.href}
-                        className={classNames(
-                          isCurrent
-                            ? "bg-gray-100 text-secondary-600"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-secondary-600",
-                          "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold"
-                        )}
-                      >
-                        <item.icon
-                          aria-hidden="true"
+                    <Can key={item.name} roles={item.roles}>
+                      <li key={item.name}>
+                        <a
+                          href={item.href}
                           className={classNames(
                             isCurrent
-                              ? "text-secondary-600"
-                              : "text-gray-400 group-hover:text-secondary-600",
-                            "size-6 shrink-0"
+                              ? "bg-gray-100 text-secondary-600"
+                              : "text-gray-700 hover:bg-gray-100 hover:text-secondary-600",
+                            "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold"
                           )}
-                        />
-                        {item.name}
-                        {item.count ? (
-                          <span
+                        >
+                          <item.icon
                             aria-hidden="true"
-                            className="ml-auto w-9 min-w-max whitespace-nowrap rounded-full bg-gray-50 px-2.5 py-0.5 text-center text-xs/5 font-medium text-gray-600 ring-1 ring-inset ring-gray-200"
-                          >
-                            {item.count}
-                          </span>
-                        ) : null}
-                      </a>
-                    </li>
+                            className={classNames(
+                              isCurrent
+                                ? "text-secondary-600"
+                                : "text-gray-400 group-hover:text-secondary-600",
+                              "size-6 shrink-0"
+                            )}
+                          />
+                          {item.name}
+                          {item.count ? (
+                            <span
+                              aria-hidden="true"
+                              className="ml-auto w-9 min-w-max whitespace-nowrap rounded-full bg-gray-50 px-2.5 py-0.5 text-center text-xs/5 font-medium text-gray-600 ring-1 ring-inset ring-gray-200"
+                            >
+                              {item.count}
+                            </span>
+                          ) : null}
+                        </a>
+                      </li>
+                    </Can>
                   );
                 })}
               </ul>
@@ -100,8 +104,10 @@ const DesktopSideBar = () => {
             href="#"
             className="group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold items-center"
           >
-            <img
-              alt={user?.name}
+            <Image
+              alt=""
+              width={40}
+              height={40}
               src={`https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${user?.name}}`}
               className="inline-block size-10 rounded-full"
             />

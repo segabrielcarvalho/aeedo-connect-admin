@@ -3,6 +3,7 @@ import {
   HeartIcon,
   UsersIcon,
 } from "@heroicons/react/24/outline";
+import { RoleEnum } from "../../contexts/AuthContext";
 import routes from "../../routes";
 
 interface NavigationItem {
@@ -10,6 +11,7 @@ interface NavigationItem {
   name: string;
   href: string;
   count?: number;
+  roles: RoleEnum[];
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
@@ -19,18 +21,21 @@ export const navigation: NavigationItem[] = [
     href: routes.dashboard.users.path,
     icon: UsersIcon,
     current: false,
+    roles: [RoleEnum.ADMIN],
   },
   {
     name: "Hospitais",
     href: routes.dashboard.hospitals.path,
     icon: BuildingStorefrontIcon,
     current: false,
+    roles: [RoleEnum.ADMIN, RoleEnum.USER],
   },
   {
     name: "Órgãos",
     href: "/dashboard/orgaos",
     icon: HeartIcon,
     current: false,
+    roles: [RoleEnum.ADMIN, RoleEnum.USER],
   },
 ];
 

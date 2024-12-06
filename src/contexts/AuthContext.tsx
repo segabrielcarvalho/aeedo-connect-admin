@@ -19,7 +19,7 @@ import routes from "../routes";
 import apiRoutes from "../routes/api";
 import apiClient from "../services/axiosClient";
 
-enum Role {
+export enum RoleEnum {
   ADMIN = "admin",
   USER = "user",
 }
@@ -29,7 +29,7 @@ export interface User {
   patientId?: string;
   name?: string;
   email?: string;
-  role?: Role;
+  role?: RoleEnum;
   document?: string | null;
   birthDate?: string | null;
   isActive?: boolean;
@@ -43,7 +43,7 @@ interface LoginOutput {
     access_token: string;
     sub: string;
     name: string;
-    role: Role;
+    role: RoleEnum;
   };
 }
 
@@ -81,9 +81,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     saveToLocalStorage: true,
   });
 
-  const [storedRole, setStoredRole] = useLocalStorageState<Role>({
+  const [storedRole, setStoredRole] = useLocalStorageState<RoleEnum>({
     key: "auth-role",
-    initialValue: Role.USER,
+    initialValue: RoleEnum.USER,
     saveToLocalStorage: true,
   });
 
@@ -133,7 +133,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         setUser(null);
         setStoredSub("");
-        setStoredRole(Role.USER);
+        setStoredRole(RoleEnum.USER);
         setStoredName("");
       } finally {
         setIsLoadingUser(false);
@@ -162,7 +162,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       nookies.destroy(null, "token_type");
 
       setStoredSub("");
-      setStoredRole(Role.USER);
+      setStoredRole(RoleEnum.USER);
       setStoredName("");
       setUser(null);
 
@@ -190,12 +190,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           });
 
           setStoredSub(userData.id || "");
-          setStoredRole(userData.role || Role.USER);
+          setStoredRole(userData.role || RoleEnum.USER);
           setStoredName(userData.name || "");
         } else if (userError) {
           setUser(null);
           setStoredSub("");
-          setStoredRole(Role.USER);
+          setStoredRole(RoleEnum.USER);
           setStoredName("");
         }
         setIsLoadingUser(false);

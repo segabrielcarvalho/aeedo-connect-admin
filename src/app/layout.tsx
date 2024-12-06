@@ -1,9 +1,12 @@
+import "moment/locale/pt-br";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
+import moment from "moment";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Providers } from "./providers";
+moment.locale("pt-br");
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
