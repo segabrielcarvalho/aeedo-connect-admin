@@ -49,7 +49,14 @@ Este script irá perguntar em qual plataforma você deseja rodar (Linux, macOS, 
 
 ### 2. Após a Execução
 
-Ao final, o script exibira as URLs para acessar a Web, Documentação, Admin e API, de acordo com as portas definidas no `.env`.
+Após o script finalizar o setup, navegue até o diretório do componente desejado dentro de `apps/` e execute o comando para iniciar o servidor de desenvolvimento:
+
+```bash
+cd apps/<nome_do_componente>
+$packageCommand run dev
+```
+
+Substitua `<nome_do_componente>` pelo componente que deseja rodar, como `aeedo-connect-web`, `aeedo-connect-doc` ou `aeedo-connect-admin`.
 
 ---
 
@@ -75,7 +82,14 @@ cd caminho\para\aeedo-connect
 .\scripts\setup-windows-native.ps1
 ```
 
-Este script fará perguntas semelhantes às do Linux/macOS, clonará os repositórios, instalará as dependências e iniciará os serviços localmente no Windows. Ao finalizar, exibira os endereços de acesso para cada serviço.
+Este script fará perguntas semelhantes às do Linux/macOS, clonando os repositórios e instalando as dependências. Após finalizar o setup, navegue até a pasta do componente em `apps/` e execute o servidor de desenvolvimento:
+
+```powershell
+cd apps\<nome_do_componente>
+$packageCommand run dev
+```
+
+Substitua `<nome_do_componente>` pelo componente que deseja rodar.
 
 ---
 
@@ -83,10 +97,10 @@ Este script fará perguntas semelhantes às do Linux/macOS, clonará os reposit�
 
 Após a execução (seja no Linux, macOS ou Windows), os serviços estarão disponíveis nas URLs configuradas nos `.env`:
 
-- **Web**: `http://localhost:<PORT_WEB>`
-- **Documentação**: `http://localhost:<PORT_DOC>`
-- **Admin**: `http://localhost:<PORT_ADMIN>`
-- **API**: `http://localhost:<PORT_API>`
+- **Web**: `http://localhost:3001`
+- **Documentação**: `http://localhost:3002`
+- **Admin**: `http://localhost:3003`
+- **API**: `http://localhost:3000`
 
 ---
 

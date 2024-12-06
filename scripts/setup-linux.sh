@@ -237,28 +237,4 @@ for i in "${!apps[@]}"; do
 done
 
 echo ""
-echo -e "${GREEN}Serviços iniciados com sucesso! Acesse os serviços abaixo:${RESET}"
-
-for app_port in "${APP_PORTS[@]}"; do
-  IFS='|' read -r app_name app_port_num <<< "$app_port"
-  case "$app_name" in
-    "aeedo-connect-web")
-      echo -e "🌐 ${CYAN}Web:${RESET} http://localhost:${app_port_num}"
-      ;;
-    "aeedo-connect-doc")
-      echo -e "📄 ${CYAN}Documentação:${RESET} http://localhost:${app_port_num}"
-      ;;
-    "aeedo-connect-admin")
-      echo -e "🛠️ ${CYAN}Admin:${RESET} http://localhost:3003"
-      ;;
-    "aeedo-connect-api")
-      echo -e "⚙️ ${CYAN}API:${RESET} http://localhost:${app_port_num}"
-      ;;
-    *)
-      echo -e "${CYAN}${app_name}:${RESET} http://localhost:${app_port_num}"
-      ;;
-  esac
-done
-
-echo ""
 echo -e "${BOLD}${GREEN}Setup local concluído com sucesso! 🚀${RESET}"
