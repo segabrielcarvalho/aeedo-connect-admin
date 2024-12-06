@@ -1,6 +1,7 @@
+// hooks/useLazyAxios.ts
 import apiClient from "@/services/axiosClient";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 interface LazyAxiosReturn<T> {
   data: T | null;
@@ -20,7 +21,7 @@ export function useLazyAxios<T = any>(): [
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const execute: LazyAxiosExecute<T> = async (config) => {
+  const execute: LazyAxiosExecute<T> = useCallback(async (config) => {
     setIsLoading(true);
     try {
       const response: AxiosResponse<T> = await apiClient(config);
@@ -33,7 +34,7 @@ export function useLazyAxios<T = any>(): [
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   return [execute, { data, error, isLoading }];
 }

@@ -9,11 +9,12 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
-import { useAxios } from "../hooks/useAxios";
 import { useLazyAxios } from "../hooks/useLazyAxios";
 import useLocalStorageState from "../hooks/useLocalStorageState";
+import routes from "../routes";
 import apiClient from "../services/axiosClient";
 
 enum Role {
@@ -60,13 +61,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const router = useRouter();
 
-  const { refetch: fetchUserRequest } = useAxios<User>({
-    url: "/me",
-    method: "GET",
-  });
-
-  const [executeSignIn] = useLazyAxios<LoginOutput>();
-  const [executeSignOut] = useLazyAxios();
+  const [executeFetchUser, fetchUserState] = useLazyAxios<User>();
+  const [executeSignIn, signInState] = useLazyAxios<LoginOutput>();
+  const [executeSignOut, signOutState] = useLazyAxios();
 
   const [storedSub, setStoredSub] = useLocalStorageState<string>({
     key: "auth-sub",
@@ -86,16 +83,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     saveToLocalStorage: true,
   });
 
+  const isInitialized = useRef(false);
+
   const fetchUser = useCallback(async () => {
     setIsLoadingUser(true);
     try {
-      const { data } = await fetchUserRequest();
-      setUser(data);
-      setStoredSub(data.id);
-      setStoredRole(data.role);
-      setStoredName(data.name);
+      const response = await executeFetchUser({
+        url: "/me",
+        method: "GET",
+      });
+      if (response && response.data) {
+        setUser(response.data);
+        setStoredSub(response.data.id);
+        setStoredRole(response.data.role);
+        setStoredName(response.data.name);
+      } else {
+        throw new Error("Usuário não encontrado");
+      }
     } catch (error) {
-      console.error("Erro ao buscar o usuário:", error);
+      console.error("Erro ao buscar usuário:", error);
       setUser(null);
       setStoredSub("");
       setStoredRole(Role.USER);
@@ -103,10 +109,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoadingUser(false);
     }
-  }, [fetchUserRequest, setStoredSub, setStoredRole, setStoredName]);
+  }, [executeFetchUser, setStoredSub, setStoredRole, setStoredName]);
 
   const signIn = useCallback(
     async ({ email, password }: { email: string; password: string }) => {
+      setIsLoadingUser(true);
       try {
         const response = await executeSignIn({
           url: "/login",
@@ -114,7 +121,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           data: { email, password },
         });
 
-        if (response?.data) {
+        if (response && response.data.success) {
           const { token_type, access_token, sub, role, name } =
             response.data.data;
 
@@ -132,39 +139,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setStoredRole(role);
           setStoredName(name);
 
+          apiClient.defaults.headers.Authorization = `${token_type} ${access_token}`;
           await fetchUser();
-
-          router.push("/");
+          router.push(routes.home.path);
         } else {
           throw new Error("Login falhou");
         }
       } catch (err) {
-        console.error("Erro ao fazer login:", err);
+        console.error("Erro ao fazer login", err);
         setUser(null);
         setStoredSub("");
         setStoredRole(Role.USER);
         setStoredName("");
-        throw err;
+      } finally {
+        setIsLoadingUser(false);
       }
     },
     [
       executeSignIn,
       router,
-      fetchUser,
       setStoredSub,
       setStoredRole,
       setStoredName,
+      fetchUser,
     ]
   );
 
   const signOut = useCallback(async () => {
+    setIsLoadingUser(true);
     try {
       await executeSignOut({
         url: "/logout",
         method: "POST",
       });
     } catch (err) {
-      console.error("Erro ao fazer logout:", err);
+      console.error("Erro ao fazer logout", err);
     } finally {
       nookies.destroy(null, "access_token");
       nookies.destroy(null, "token_type");
@@ -175,7 +184,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setUser(null);
 
-      router.push("/login");
+      router.push(routes.auth.login.path);
+      setIsLoadingUser(false);
     }
   }, [executeSignOut, router, setStoredSub, setStoredRole, setStoredName]);
 
@@ -183,10 +193,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initializeAuth = async () => {
       const cookies = nookies.get(null);
       const token = cookies.access_token;
-      const tokenType = cookies.token_type;
 
-      if (token && tokenType) {
-        apiClient.defaults.headers.Authorization = `${tokenType} ${token}`;
+      if (token) {
+        apiClient.defaults.headers.Authorization = `${cookies.token_type} ${token}`;
         await fetchUser();
       } else {
         const sub = storedSub;
@@ -204,15 +213,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
             birthDate: null,
             isActive: true,
           });
-        } else {
-          setUser(null);
         }
 
         setIsLoadingUser(false);
       }
     };
 
-    initializeAuth();
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      initializeAuth();
+    }
   }, [fetchUser, storedSub, storedRole, storedName]);
 
   return (
