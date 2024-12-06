@@ -1,7 +1,5 @@
 import {
-  ArrowTopRightOnSquareIcon,
   BuildingStorefrontIcon,
-  CodeBracketIcon,
   HeartIcon,
   UsersIcon,
 } from "@heroicons/react/24/outline";
@@ -11,11 +9,17 @@ interface NavigationItem {
   current: any;
   name: string;
   href: string;
+  count?: number;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 export const navigation: NavigationItem[] = [
-  { name: "Usuários", href: routes.dashboard.users.path, icon: UsersIcon, current: false },
+  {
+    name: "Usuários",
+    href: routes.dashboard.users.path,
+    icon: UsersIcon,
+    current: false,
+  },
   {
     name: "Hospitais",
     href: routes.dashboard.hospitals.path,
@@ -28,22 +32,25 @@ export const navigation: NavigationItem[] = [
     icon: HeartIcon,
     current: false,
   },
+];
+
+export const secondaryNavigation = [
   {
     name: "Site Institucional",
-    href: "#",
-    icon: ArrowTopRightOnSquareIcon,
+    href: "http://localhost:3001",
+    initial: "W",
     current: false,
   },
   {
     name: "Documentação",
-    href: "#",
-    icon: ArrowTopRightOnSquareIcon,
+    href: "http://localhost:3001",
+    initial: "D",
     current: false,
   },
   {
     name: "GitHub",
-    href: "#",
-    icon: CodeBracketIcon,
+    href: "https://github.com/segabrielcarvalho/aeedo-connect",
+    initial: "G",
     current: false,
   },
 ];
