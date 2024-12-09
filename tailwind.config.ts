@@ -1,7 +1,7 @@
 import headlessuiPlugin from "@headlessui/tailwindcss";
 import aspectRatio from "@tailwindcss/aspect-ratio";
 import formsPlugin from "@tailwindcss/forms";
-import type { Config } from "tailwindcss";
+import { Config } from "tailwindcss/types/config";
 
 export default {
   content: [
@@ -25,7 +25,6 @@ export default {
       "8xl": ["6rem", { lineHeight: "1" }],
       "9xl": ["8rem", { lineHeight: "1" }],
     },
-
     extend: {
       transitionTimingFunction: {
         "smooth-in-out": "cubic-bezier(0.25, 0.8, 0.25, 1)",
@@ -110,5 +109,5 @@ export default {
       },
     },
   },
-  plugins: [headlessuiPlugin, aspectRatio, formsPlugin],
+  plugins: [formsPlugin, headlessuiPlugin, aspectRatio],
 } satisfies Config;

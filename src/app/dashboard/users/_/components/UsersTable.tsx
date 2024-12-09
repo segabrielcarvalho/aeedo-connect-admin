@@ -1,97 +1,59 @@
 "use client";
 
+import EmptyState from "@/components/EmptyState";
 import Table from "@/components/Table";
-import UserProfile from "@/components/UserInfo";
-import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import routes from "@/routes";
 import { useRouter } from "next/navigation";
-import routes from "../../../../../routes";
+import { useMemo } from "react";
+import { LiaUserSlashSolid } from "react-icons/lia";
+import { adminColumns, generalColumns } from "../constants";
+import { useUsersContext } from "../context/UsersContext";
 
 export const UsersTable = () => {
+  const {
+    axios: {
+      usersQuery: { data },
+    },
+    get: { filterUserType },
+  } = useUsersContext();
   const router = useRouter();
+
+  const columns = useMemo(() => {
+    if (!data || data.length === 0) return [];
+
+    if (filterUserType === "donor" || filterUserType === "recipient") {
+      return generalColumns;
+    }
+
+    if (filterUserType === "admin" || !filterUserType) {
+      return adminColumns;
+    }
+
+    return [];
+  }, [data, filterUserType]);
+
+  if (data?.length === 0) {
+    return (
+      <EmptyState
+        title="Nenhum usuário disponível"
+        description="Não há registros de usuários correspondentes à sua busca. Tente ajustar os filtros ou realizar outra pesquisa."
+        icon={<LiaUserSlashSolid className="h-12 w-12 text-gray-400" />}
+      />
+    );
+  }
 
   return (
     <Table
-      onAction={(data) => {
+      onAction={(user) => {
         router.push(
           routes.dashboard.users.show.path.replace(
             "[userId]",
-            data.id.toString()
+            user.id.toString()
           )
         );
       }}
-      data={Array.from({ length: 5 }).map((_, index) => ({
-        id: index,
-        name: "John Doe",
-        email: "user@user.com",
-        type: index % 2 === 0 ? "Doador" : "Receptor",
-        document: "123.456.789-00",
-        birthdate: "01/01/2000",
-        role: "Admin",
-        isActive: index % 2 === 0,
-      }))}
-      columns={[
-        {
-          header: "Usuário",
-          render: (data) => (
-            <UserProfile
-              name={data.name}
-              email={data.email}
-              avatarUrl="https://images.unsplash.com/photo-1732919258508-3fd53a8007b6?q=80&w=1976&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            />
-          ),
-          alwaysVisible: true,
-        },
-        {
-          header: "Tipo",
-          render: (data) => (
-            <span className="text-gray-600 text-sm font-light ">
-              {data.type}
-            </span>
-          ),
-        },
-        {
-          header: "Perfil",
-          render: (data) => (
-            <span className="text-gray-600 text-sm font-light ">
-              {data.role}
-            </span>
-          ),
-        },
-        {
-          header: "Documento",
-          render: (data) => (
-            <span className="text-gray-600 text-sm font-light ">
-              {data.document}
-            </span>
-          ),
-        },
-        {
-          header: "Nascimento",
-          render: (data) => (
-            <span className="text-gray-600 text-sm font-light ">
-              {data.birthdate}
-            </span>
-          ),
-        },
-        {
-          header: "Ativo",
-          render: (data) => (
-            <span>
-              {data.isActive ? (
-                <CheckCircleIcon
-                  aria-hidden="true"
-                  className="text-green-500 h-6 w-6"
-                />
-              ) : (
-                <XMarkIcon
-                  className="text-red-500 h-6 w-6"
-                  aria-hidden="true"
-                />
-              )}
-            </span>
-          ),
-        },
-      ]}
+      data={data || []}
+      columns={columns}
     />
   );
 };

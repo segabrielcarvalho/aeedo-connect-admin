@@ -11,6 +11,8 @@
     "editor.defaultFormatter": "foxundermoon.shell-format"
   },
   "cSpell.words": [
-    "headlessui"
+    "headlessui",
+    "loadenv",
+    "neighbourhood"
   ]
 }

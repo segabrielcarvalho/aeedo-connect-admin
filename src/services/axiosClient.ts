@@ -1,24 +1,25 @@
-import axios, { AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
+import nookies from "nookies";
+import { client } from "../config";
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: client.baseURL || "http://localhost:3000/api",
   withCredentials: true,
 });
 
-apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem("auth_token");
-  if (token && config.headers) {
-    config.headers.set("Authorization", `Bearer ${token}`);
-  }
-  return config;
-});
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const cookies = nookies.get(null);
+    const token = cookies.access_token;
+    const tokenType = cookies.token_type;
 
-apiClient.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.error("Não autorizado, redirecionando...");
+    if (token && tokenType) {
+      config.headers.set("Authorization", `${tokenType} ${token}`);
     }
+
+    return config;
+  },
+  (error) => {
     return Promise.reject(error);
   }
 );

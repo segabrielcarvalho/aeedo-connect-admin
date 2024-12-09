@@ -1,48 +1,18 @@
 "use client";
 
 import Button from "@/components/Button";
+import SectionHeading from "@/components/SectionHeading";
 import React from "react";
-import SectionHeading from "../../../../../../../components/SectionHeading";
-import { HospitalField } from "../../../../../hospitals/[hospitalId]/_/components/HospitalField";
-
-export interface Hospital {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-  cnpj: string;
-  status: "Ativo" | "Inativo";
-  address: {
-    street: string;
-    neighborhood: string;
-    state: string;
-    city: string;
-    houseNumber: string;
-    complement?: string;
-    zipCode: string;
-  };
-}
+import { useMeContext } from "../../../Context/MeContext";
+import { HospitalField } from "../../HospitalField";
 
 const HospitalSection: React.FC = () => {
-  const hospitals: Hospital[] = [
-    {
-      id: 1,
-      name: "Hospital Santa Maria",
-      phone: "(11) 98765-4321",
-      email: "contato@santamaria.com",
-      cnpj: "12.345.678/0001-90",
-      status: "Ativo",
-      address: {
-        street: "Rua das Flores",
-        neighborhood: "Jardim Primavera",
-        state: "SP",
-        city: "São Paulo",
-        houseNumber: "100",
-        complement: "Apto 202",
-        zipCode: "12345-678",
-      },
-    },
-  ];
+  const { patientDetails } = useMeContext();
+  const hospitals = patientDetails?.hospitals || [];
+
+  const handleEditHospital = (id: number) => {
+    console.log(`Editar hospital com ID: ${id}`);
+  };
 
   const handleAddHospital = () => {
     console.log("Adicionar novo hospital");
@@ -52,21 +22,28 @@ const HospitalSection: React.FC = () => {
     <div>
       <SectionHeading
         title="Hospitais"
-        description="Gerencie os hospitais abaixo."
+        description="Gerencie os hospitais vinculados ao seu perfil."
       />
 
-      <ul role="list" className="mt-6 border-gray-200 text-sm/6">
-        {hospitals.map((hospital) => (
-          <HospitalField
-            key={hospital.id}
-            hospital={hospital}
-            onEdit={handleAddHospital}
-          />
-        ))}
-      </ul>
+      {hospitals.length > 0 ? (
+        <div className="grid gap-4 mt-6">
+          {hospitals.map((hospital) => (
+            <HospitalField key={hospital.id} hospital={hospital} />
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-500 mt-4">Nenhum hospital encontrado.</p>
+      )}
 
-      <Button className="w-full mt-6" color="primary" variant="unstyled">
-        + Adicionar Hospital
+      <Button
+        className="w-full mt-6"
+        color="primary"
+        variant="unstyled"
+        onClick={handleAddHospital}
+      >
+        {hospitals.length > 0
+          ? "+ Vincular Novo Hospital"
+          : "+ Adicionar Hospital"}
       </Button>
     </div>
   );

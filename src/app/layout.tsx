@@ -1,9 +1,12 @@
+import "moment/locale/pt-br";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
+import moment from "moment";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Providers } from "./providers";
+moment.locale("pt-br");
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -28,10 +31,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html className="h-full bg-white" lang="pt-br">
+    <html className="h-full bg-slate-100" lang="pt-br">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full bg-gray-50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased  bg-gray-50 h-full justify-center items-center w-auto`}
       >
+        <div id="portal-root" />
+        <div id="app-root" />
+
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -14,7 +14,10 @@ const routes = {
       show: { path: "/dashboard/hospitals/[hospitalId]" },
       create: { path: "/dashboard/hospitals/create" },
     },
-    organs: { path: "/dashboard/organs" },
+    organs: {
+      path: "/dashboard/organs",
+      create: { path: "/dashboard/organs/create" },
+    },
     me: { path: "/dashboard/me" },
   },
   auth: {
