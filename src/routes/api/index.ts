@@ -55,7 +55,7 @@ const apiRoutes = {
   },
 
   patient: {
-    details: { path: "/patient-details/:id", method: "GET" },
+    details: { path: "/patient-details", method: "GET" },
   },
 };
 

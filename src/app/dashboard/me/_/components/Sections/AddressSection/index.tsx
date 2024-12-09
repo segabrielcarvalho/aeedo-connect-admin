@@ -1,53 +1,44 @@
+"use client";
+
 import Button from "@/components/Button";
 import SectionHeading from "@/components/SectionHeading";
 import React from "react";
+import { useMeContext } from "../../../Context/MeContext";
 import { AddressField } from "../../AddressField";
 
 const AddressSection: React.FC = () => {
-  const addresses = [
-    {
-      id: 1,
-      zipCode: "12345-678",
-      street: "Rua das Flores",
-      neighborhood: "Jardim Primavera",
-      state: "SP",
-      city: "São Paulo",
-      houseNumber: "100",
-      complement: "Apt 202",
-      createdAt: "2023-11-29T10:00:00Z",
-    },
-  ];
+  const { patientDetails } = useMeContext();
+  const address = patientDetails?.address;
 
-  const handleUpdate = (id: number) => {
-    console.log(`Atualizar endereço com ID: ${id}`);
+  const handleUpdate = () => {
+    console.log(`Atualizar endereço`);
   };
 
   return (
     <div>
       <SectionHeading
-        title="Endereços"
-        description="Gerencie seus endereços abaixo."
+        title="Endereço"
+        description="Gerencie o endereço vinculado ao seu perfil."
       />
 
-      <div className="text-sm/6 divide-y divide-gray-100 grid gap-y-6 grid-cols-3">
-        {addresses.map((address) => (
-          <AddressField
-            key={address.id}
-            zipCode={address.zipCode}
-            street={address.street}
-            neighborhood={address.neighborhood}
-            state={address.state}
-            city={address.city}
-            houseNumber={address.houseNumber}
-            complement={address.complement}
-            createdAt={address.createdAt}
-            onUpdate={() => handleUpdate(address.id)}
-          />
-        ))}
-      </div>
+      {address ? (
+        <AddressField
+          zipCode={address.zipCode}
+          street={address.street}
+          neighborhood={address.neighbourhood}
+          state={address.state}
+          city={address.city}
+          houseNumber={address.houseNumber || ""}
+          complement={address.complement || ""}
+          createdAt={address.createdAt}
+          onUpdate={handleUpdate}
+        />
+      ) : (
+        <p className="text-gray-500 mt-4">Nenhum endereço encontrado.</p>
+      )}
 
       <Button className="w-full mt-6" color="primary" variant="unstyled">
-        + Adicionar Endereço
+        {address ? "Atualizar Endereço" : "+ Adicionar Endereço"}
       </Button>
     </div>
   );

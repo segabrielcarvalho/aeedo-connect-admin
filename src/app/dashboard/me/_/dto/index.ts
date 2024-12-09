@@ -1,16 +1,17 @@
 import { BloodTypeEnum } from "../../../../../dto/global";
 
 export interface Address {
+  zipCode: string;
   street: string;
   neighbourhood: string;
-  city: string;
   state: string;
-  zipCode: string;
-  houseNumber?: string;
+  city: string;
+  houseNumber: string;
   complement?: string | null;
 }
 
 export interface Hospital {
+  id: string;
   name: string;
   phone: string;
   email: string;
@@ -20,7 +21,9 @@ export interface Hospital {
 }
 
 export interface Organ {
+  id: string;
   name: string;
+  slug: string;
   organType: string;
 }
 

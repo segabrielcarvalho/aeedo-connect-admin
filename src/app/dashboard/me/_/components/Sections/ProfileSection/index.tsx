@@ -11,6 +11,8 @@ const ProfileSection: React.FC = () => {
   const { user } = useAuthContext();
   const { patientDetails, isLoading } = useMeContext();
 
+  console.log("patientDetails", patientDetails);
+
   const profileData = useMemo(() => {
     if (!user) return [];
 

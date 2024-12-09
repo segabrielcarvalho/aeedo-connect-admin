@@ -12,18 +12,6 @@ interface AddressItemProps {
   onUpdate: () => void;
 }
 
-interface AddressDetailProps {
-  label: string;
-  value: string;
-}
-
-const AddressDetail: React.FC<AddressDetailProps> = ({ label, value }) => (
-  <div>
-    <span className="block text-sm font-medium text-gray-700">{label}</span>
-    <p className="text-gray-900">{value}</p>
-  </div>
-);
-
 export const AddressField: React.FC<AddressItemProps> = ({
   zipCode,
   street,
@@ -36,28 +24,17 @@ export const AddressField: React.FC<AddressItemProps> = ({
   onUpdate,
 }) => {
   return (
-    <li className="flex flex-col gap-y-4 py-6 border-b border-gray-200">
-      <AddressDetail
-        label="Endereço"
-        value={`${street}, ${houseNumber} ${
-          complement ? `(${complement})` : ""
-        }`}
-      />
-      <AddressDetail label="Bairro" value={neighborhood} />
-
-      <div className="flex gap-10">
-        <AddressDetail label="Cidade" value={city} />
-        <AddressDetail label="Estado" value={state} />
+    <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-md">
+      <div className="flex-1">
+        <p className="text-sm font-medium text-gray-700">
+          {`${street}, ${houseNumber} ${
+            complement ? `(${complement})` : ""
+          } - ${neighborhood}, ${city} - ${state}`}
+        </p>
+        <p className="text-sm text-gray-500">
+          CEP: {zipCode} | Criado em: {new Date(createdAt).toLocaleDateString()}
+        </p>
       </div>
-
-      <div className="flex gap-10">
-        <AddressDetail label="CEP" value={zipCode} />
-        <AddressDetail
-          label="Criado em"
-          value={new Date(createdAt).toLocaleDateString()}
-        />
-      </div>
-
       <Button
         className="text-primary-400"
         color="secondary"
@@ -66,6 +43,6 @@ export const AddressField: React.FC<AddressItemProps> = ({
       >
         Editar
       </Button>
-    </li>
+    </div>
   );
 };
