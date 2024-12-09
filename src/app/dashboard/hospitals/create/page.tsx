@@ -4,6 +4,7 @@ import { Input } from "@/components/Form/Input";
 import SectionHeading from "@/components/SectionHeading";
 import useToastHook from "@/hooks/useToastHook";
 import routes from "@/routes";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { BiDetail } from "react-icons/bi";
@@ -19,42 +20,61 @@ import {
 } from "react-icons/gi";
 import { IoWaterOutline } from "react-icons/io5";
 import { LuBone, LuBrain } from "react-icons/lu";
+import { useAxiosMutation } from "../../../../hooks/useAxiosMutation";
+import apiRoutes from "../../../../routes/api";
 import {
   CreateHospitalAddressVariables,
+  CreateHospitalResponse,
   CreateHospitalVariables,
+  createHospitalSchema,
 } from "./_/dto";
 
 const CreateHospitalPage: React.FC = () => {
   const router = useRouter();
   const { error, success } = useToastHook();
-  const { control, reset, handleSubmit, watch, setValue } = useForm<
-    CreateHospitalVariables & CreateHospitalAddressVariables
-  >();
 
-  let data: CreateHospitalVariables & CreateHospitalAddressVariables = {
-    data: {
+  const [submit, { loading }] = useAxiosMutation<
+    CreateHospitalResponse,
+    CreateHospitalVariables & CreateHospitalAddressVariables
+  >({
+    url: apiRoutes.hospitals.admin.create.path,
+    method: apiRoutes.hospitals.admin.create.method,
+  });
+
+  const {
+    control,
+    reset,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateHospitalVariables>({
+    resolver: zodResolver(createHospitalSchema),
+    defaultValues: {
       name: "",
       email: "",
       phone: "",
       cnpj: "",
       password: "",
-      zipCode: "",
-      street: "",
-      neighborhood: "",
-      houseNumber: "",
-      complement: "",
-      city: "",
-      state: "",
+      confirmPassword: "",
+      address: {
+        city: "",
+        state: "",
+        zipCode: "",
+        street: "",
+        neighborhood: "",
+        houseNumber: "",
+        complement: "",
+      },
     },
-  };
+  });
 
   const submitImplementation: SubmitHandler<
     CreateHospitalVariables & CreateHospitalAddressVariables
   > = async (args) => {
     try {
+      await submit({ variables: args });
       success({ message: "Hospital criado com sucesso." });
       reset();
-      router.push(routes.dashboard.users.path);
+      router.push(routes.dashboard.hospitals.path);
     } catch (e) {
       console.error(e);
       error({ message: "Erro ao criar Hospital." });
@@ -93,30 +113,34 @@ const CreateHospitalPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-y-6">
           <Controller
             control={control}
-            name="data.name"
-            render={({ field: { name, onChange, ref } }) => (
+            name="name"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 label="Nome da Instituição"
                 placeholder='Ex: "Hospital São Paulo"'
                 name={name}
                 isRequired
+                error={errors?.name}
               />
             )}
           />
 
           <Controller
             control={control}
-            name="data.email"
-            render={({ field: { name, onChange, ref } }) => (
+            name="email"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 label="Email"
                 placeholder='Ex: "user@user.com"'
                 name={name}
                 isRequired
+                error={errors?.email}
               />
             )}
           />
@@ -125,30 +149,34 @@ const CreateHospitalPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-y-6">
           <Controller
             control={control}
-            name="data.phone"
-            render={({ field: { name, onChange, ref } }) => (
+            name="phone"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 label="Telefone"
                 placeholder='Ex: "(11) 99999-9999"'
                 name={name}
                 isRequired
+                error={errors?.phone}
               />
             )}
           />
 
           <Controller
             control={control}
-            name="data.cnpj"
-            render={({ field: { name, onChange, ref } }) => (
+            name="cnpj"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 label="CNPJ"
                 placeholder="Insira seu CNPJ"
                 name={name}
                 isRequired
+                error={errors?.cnpj}
               />
             )}
           />
@@ -157,28 +185,40 @@ const CreateHospitalPage: React.FC = () => {
         <div className="grid col-start-2 gap-y-6">
           <Controller
             control={control}
-            name="data.password"
-            render={({ field: { name, onChange, ref } }) => (
+            name="password"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 type="password"
                 label="Senha"
                 placeholder="Digite uma senha"
                 name={name}
                 isRequired
+                error={errors?.password}
               />
             )}
           />
         </div>
 
         <div className="grid col-start-3 gap-y-6">
-          <Input
+          <Controller
+            control={control}
             name="confirmPassword"
-            type="password"
-            label="Confirmar Senha"
-            placeholder="Digite uma senha"
-            isRequired
+            render={({ field: { name, onChange, ref, value } }) => (
+              <Input
+                ref={ref}
+                onChange={onChange}
+                value={value}
+                type="password"
+                label="Confirmar Senha"
+                placeholder="Confirme sua senha"
+                name={name}
+                isRequired
+                error={errors?.confirmPassword}
+              />
+            )}
           />
         </div>
       </div>
@@ -193,30 +233,34 @@ const CreateHospitalPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-y-6">
           <Controller
             control={control}
-            name="data.zipCode"
-            render={({ field: { name, onChange, ref } }) => (
+            name="address.zipCode"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 label="Caixa Postal"
                 placeholder="CEP"
                 name={name}
                 isRequired
+                error={errors?.address?.zipCode}
               />
             )}
           />
 
           <Controller
             control={control}
-            name="data.street"
-            render={({ field: { name, onChange, ref } }) => (
+            name="address.street"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 label="Rua"
                 placeholder='Ex: "Rua Oscar Niemeyer"'
                 name={name}
                 isRequired
+                error={errors?.address?.street}
               />
             )}
           />
@@ -225,30 +269,34 @@ const CreateHospitalPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-y-6">
           <Controller
             control={control}
-            name="data.neighborhood"
-            render={({ field: { name, onChange, ref } }) => (
+            name="address.neighborhood"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 label="Bairro"
                 placeholder='Ex: "Av. Filostro"'
                 name={name}
                 isRequired
+                error={errors?.address?.neighborhood}
               />
             )}
           />
 
           <Controller
             control={control}
-            name="data.houseNumber"
-            render={({ field: { name, onChange, ref } }) => (
+            name="address.houseNumber"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 label="Número"
                 placeholder='Ex: "90"'
                 name={name}
                 isRequired
+                error={errors?.address?.houseNumber}
               />
             )}
           />
@@ -257,33 +305,55 @@ const CreateHospitalPage: React.FC = () => {
         <div className="grid col-start-2 gap-y-6">
           <Controller
             control={control}
-            name="data.complement"
-            render={({ field: { name, onChange, ref } }) => (
+            name="address.complement"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 label="Complemento"
                 placeholder='Ex: "Próximo ao mercado"'
                 name={name}
                 isRequired
+                error={errors?.address?.complement}
               />
             )}
           />
 
-          <Input
-            name="data.city"
-            label="Cidade"
-            placeholder='Ex: "São Paulo"'
-            isRequired
+          <Controller
+            control={control}
+            name="address.city"
+            render={({ field: { name, onChange, ref, value } }) => (
+              <Input
+                ref={ref}
+                onChange={onChange}
+                value={value}
+                label="Cidade"
+                placeholder='Ex: "São Paulo"'
+                name={name}
+                isRequired
+                error={errors?.address?.city}
+              />
+            )}
           />
         </div>
 
         <div>
-          <Input
-            name="data.state"
-            label="Estado"
-            placeholder='Ex: "Goiás"'
-            isRequired
+          <Controller
+            control={control}
+            name="address.state"
+            render={({ field: { name, onChange, ref, value } }) => (
+              <Input
+                ref={ref}
+                onChange={onChange}
+                value={value}
+                label="Estado"
+                placeholder='Ex: "Goiás"'
+                name={name}
+                isRequired
+                error={errors?.address?.state}
+              />
+            )}
           />
         </div>
       </div>
@@ -294,7 +364,7 @@ const CreateHospitalPage: React.FC = () => {
           color="primary"
           type="button"
           className="rounded-md px-5"
-          onClick={() => router.push(routes.dashboard.users.path)}
+          onClick={() => router.push(routes.dashboard.hospitals.path)}
         >
           Cancelar
         </Button>
@@ -303,6 +373,7 @@ const CreateHospitalPage: React.FC = () => {
           color="secondary"
           className="rounded-md px-12"
           type="submit"
+          isLoading={loading}
         >
           Criar
         </Button>
