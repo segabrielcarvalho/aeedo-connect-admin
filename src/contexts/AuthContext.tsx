@@ -23,10 +23,6 @@ export enum RoleEnum {
   ADMIN = "admin",
   USER = "user",
 }
-export enum RolePatientEnum {
-  DONOR = "donor",
-  RECIPIENT = "recipient",
-}
 
 export interface User {
   id?: string;
@@ -67,15 +63,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const router = useRouter();
 
-  const {
-    data: userData,
-    error: userError,
-    isLoading: userDataLoading,
-  } = useAxios<User>({
-    url: apiRoutes.auth.me.path,
-    method: "GET",
-  });
-
   const [executeSignIn] = useLazyAxios<LoginOutput>();
   const [executeSignOut] = useLazyAxios();
 
@@ -98,6 +85,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   });
 
   const isInitialized = useRef(false);
+
+  const cookies = nookies.get(null);
+  const token = cookies.access_token;
+
+  const {
+    data: userData,
+    error: userError,
+    isLoading: userDataLoading,
+  } = useAxios<User>({
+    url: apiRoutes.auth.me.path,
+    method: "GET",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
 
   const signIn = useCallback(
     async ({ email, password }: { email: string; password: string }) => {
@@ -123,30 +123,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
           apiClient.defaults.headers.Authorization = `${token_type} ${access_token}`;
 
-          const meResponse = await apiClient.get(apiRoutes.auth.me.path);
-          const userResponse = meResponse.data.data;
-          const meData: User = {
-            id: userResponse.id,
-            patientId: userResponse.patientId,
-            name: userResponse.name,
-            email: userResponse.email,
-            role: userResponse.role,
-            document: userResponse.document,
-            birthDate: userResponse.birthDate,
-            isActive: userResponse.isActive,
-          };
-
-          setUser(meData);
-          setStoredSub(meData.id || "");
-          setStoredRole(meData.role || RoleEnum.USER);
-          setStoredName(meData.name || "");
-
           success({ message: "Login efetuado com sucesso!" });
 
           setIsLoadingUser(false);
-          setTimeout(() => {
-            router.push(routes.home.path);
-          }, 50);
+
+          router.replace(routes.home.path);
         }
       } catch (err: any) {
         const errorMessage =
@@ -157,6 +138,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setStoredSub("");
         setStoredRole(RoleEnum.USER);
         setStoredName("");
+
         setIsLoadingUser(false);
       }
     },
@@ -178,25 +160,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
         url: apiRoutes.auth.logout.path,
         method: "POST",
       });
+    } catch (error) {
+      console.error("Erro ao deslogar:", error);
     } finally {
-      nookies.destroy(null, "access_token");
-      nookies.destroy(null, "token_type");
+      nookies.destroy(null, "access_token", { path: "/" });
+      nookies.destroy(null, "token_type", { path: "/" });
 
       localStorage.removeItem("auth-sub");
       localStorage.removeItem("auth-role");
       localStorage.removeItem("auth-name");
 
-      setUser(null);
+      delete apiClient.defaults.headers.Authorization;
 
-      router.push(routes.auth.login.path);
+      setUser(null);
+      setStoredSub(null);
+      setStoredRole(null);
+      setStoredName(null);
+
+      router.replace(routes.auth.login.path);
       setIsLoadingUser(false);
     }
-  }, [executeSignOut, router]);
+  }, [executeSignOut, router, setStoredSub, setStoredRole, setStoredName]);
 
   useEffect(() => {
-    const cookies = nookies.get(null);
-    const token = cookies.access_token;
-
     if (token) {
       if (!userDataLoading) {
         if (userData) {
@@ -241,7 +227,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       setIsLoadingUser(false);
     }
-  }, [userData, userError, userDataLoading, storedSub, storedRole, storedName]);
+  }, [
+    userData,
+    userError,
+    userDataLoading,
+    storedSub,
+    storedRole,
+    storedName,
+    token,
+    setStoredName,
+    setStoredRole,
+    setStoredSub,
+  ]);
 
   useEffect(() => {
     if (!isInitialized.current) {
