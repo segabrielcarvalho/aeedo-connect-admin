@@ -1,6 +1,7 @@
 import { BloodTypeEnum } from "../../../../../dto/global";
 
 export interface Address {
+  id: string;
   zipCode: string;
   street: string;
   neighbourhood: string;

@@ -19,6 +19,11 @@ import routes from "../routes";
 import apiRoutes from "../routes/api";
 import apiClient from "../services/axiosClient";
 
+export enum RolePatientEnum {
+  DONOR = "donor",
+  RECIPIENT = "recipient",
+}
+
 export enum RoleEnum {
   ADMIN = "admin",
   USER = "user",
