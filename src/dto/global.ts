@@ -24,3 +24,14 @@ export interface DebouncedFunc<T extends (...args: any[]) => any> {
    */
   flush(): ReturnType<T> | undefined;
 }
+
+export enum BloodTypeEnum {
+  APositive = "A+",
+  ANegative = "A-",
+  BPositive = "B+",
+  BNegative = "B-",
+  ABPositive = "AB+",
+  ABNegative = "AB-",
+  OPositive = "O+",
+  ONegative = "O-",
+}

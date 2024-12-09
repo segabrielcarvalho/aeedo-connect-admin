@@ -24,6 +24,11 @@ export enum RoleEnum {
   USER = "user",
 }
 
+export enum RolePatientEnum {
+  DONOR = "donor",
+  RECEIVER = "receiver",
+}
+
 export interface User {
   id?: string;
   patientId?: string;

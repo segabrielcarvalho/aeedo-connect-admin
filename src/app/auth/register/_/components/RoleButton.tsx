@@ -1,11 +1,12 @@
 import { HeartIcon } from "@heroicons/react/16/solid";
 import { GiftIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
+import { RolePatientEnum } from "../../../../../contexts/AuthContext";
 
 interface RoleButtonProps {
-  role: "doador" | "receptor";
-  selectedRole: "doador" | "receptor" | null;
-  onSelect: (role: "doador" | "receptor") => void;
+  role: RolePatientEnum;
+  selectedRole?: any;
+  onSelect: (role: RolePatientEnum) => void;
 }
 
 const RoleButton: React.FC<RoleButtonProps> = ({
@@ -14,7 +15,7 @@ const RoleButton: React.FC<RoleButtonProps> = ({
   onSelect,
 }) => {
   const isSelected = selectedRole === role;
-  const label = role === "doador" ? "Doador" : "Receptor";
+  const label = role === RolePatientEnum.DONOR ? "Doador" : "Receptor";
 
   return (
     <button
@@ -26,7 +27,7 @@ const RoleButton: React.FC<RoleButtonProps> = ({
           : "border-gray-300 bg-gray-100"
       }`}
     >
-      {role === "doador" ? (
+      {role === RolePatientEnum.DONOR ? (
         <HeartIcon
           className={clsx("w-8 h-8", {
             "text-primary-default": isSelected,

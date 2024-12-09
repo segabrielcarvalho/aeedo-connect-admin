@@ -14,14 +14,23 @@ export const UsersTable = () => {
     axios: {
       usersQuery: { data },
     },
+    get: { filterUserType },
   } = useUsersContext();
   const router = useRouter();
 
   const columns = useMemo(() => {
     if (!data || data.length === 0) return [];
-    const firstUser = data[0];
-    return firstUser.role === "admin" ? adminColumns : generalColumns;
-  }, [data]);
+
+    if (filterUserType === "donor" || filterUserType === "recipient") {
+      return generalColumns;
+    }
+
+    if (filterUserType === "admin" || !filterUserType) {
+      return adminColumns;
+    }
+
+    return [];
+  }, [data, filterUserType]);
 
   if (data?.length === 0) {
     return (
@@ -39,7 +48,7 @@ export const UsersTable = () => {
         router.push(
           routes.dashboard.users.show.path.replace(
             "[userId]",
-            user.email.toString()
+            user.id.toString()
           )
         );
       }}
