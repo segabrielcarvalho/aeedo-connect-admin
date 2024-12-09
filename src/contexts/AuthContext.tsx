@@ -106,8 +106,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
 
         if (response?.data?.success) {
-          const { token_type, access_token, sub, role, name } =
-            response.data.data;
+          const { token_type, access_token } = response.data.data;
+
           nookies.set(null, "access_token", access_token, {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
@@ -119,12 +119,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
           apiClient.defaults.headers.Authorization = `${token_type} ${access_token}`;
 
-          setStoredSub(sub);
-          setStoredRole(role);
-          setStoredName(name);
+          const meResponse = await apiClient.get(apiRoutes.auth.me.path);
+          const userResponse = meResponse.data.data;
+          const meData: User = {
+            id: userResponse.id,
+            patientId: userResponse.patientId,
+            name: userResponse.name,
+            email: userResponse.email,
+            role: userResponse.role,
+            document: userResponse.document,
+            birthDate: userResponse.birthDate,
+            isActive: userResponse.isActive,
+          };
+
+          setUser(meData);
+          setStoredSub(meData.id || "");
+          setStoredRole(meData.role || RoleEnum.USER);
+          setStoredName(meData.name || "");
 
           success({ message: "Login efetuado com sucesso!" });
-          router.push(routes.home.path);
+
+          setIsLoadingUser(false);
+          setTimeout(() => {
+            router.push(routes.home.path);
+          }, 50);
         }
       } catch (err: any) {
         const errorMessage =
@@ -135,7 +153,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setStoredSub("");
         setStoredRole(RoleEnum.USER);
         setStoredName("");
-      } finally {
         setIsLoadingUser(false);
       }
     },

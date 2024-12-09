@@ -1,19 +1,21 @@
 "use client";
 import { DebouncedFunc } from "@/dto/global";
+import { useAxios } from "@/hooks/useAxios";
 import useUrlFilter from "@/hooks/useUrlFilter";
+import apiRoutes from "@/routes/api";
 import { createContext, ReactNode, useContext } from "react";
 import { User } from "../dto";
 
 type UsersProviderProps = { children: ReactNode };
 type ContextType = {
-  get: {
-    users: User[];
-    filterUserType: "donor" | "recipient" | null;
-  };
+  get: { filterUserType: "donor" | "recipient" | "admin" | null | undefined };
   set: {
     setFilterUserType: DebouncedFunc<
-      (value: "donor" | "recipient" | null | undefined) => void
+      (value: "donor" | "recipient" | "admin" | null | undefined) => void
     >;
+  };
+  axios: {
+    usersQuery: ReturnType<typeof useAxios<User[]>>;
   };
 };
 
@@ -23,18 +25,27 @@ export type FilterObject = {
 };
 
 const UsersContext = createContext<ContextType | undefined>(undefined);
+
 export function UsersContextProvider({ children }: UsersProviderProps) {
   const [filterUserType, setFilterUserType] = useUrlFilter<
-    "donor" | "recipient"
-  >({ name: "user_type" });
+    "donor" | "recipient" | "admin" | null
+  >({ name: "type" });
+
+  const usersQuery = useAxios<User[]>({
+    url: apiRoutes.users.list.path,
+    method: apiRoutes.users.list.method,
+    params: filterUserType ? { type: filterUserType } : {},
+  });
 
   const value: ContextType = {
     get: {
-      users: [],
       filterUserType,
     },
     set: {
       setFilterUserType,
+    },
+    axios: {
+      usersQuery,
     },
   };
 

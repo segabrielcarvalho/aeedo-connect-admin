@@ -1,4 +1,5 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import apiClient from "@/services/axiosClient"; // Importando o apiClient
+import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { useCallback, useState } from "react";
 
 interface MutationState<T> {
@@ -11,11 +12,6 @@ type MutationFunction<T, V> = (options?: {
   variables?: V;
 }) => Promise<AxiosResponse<T>>;
 
-/**
- * Hook para executar mutações HTTP usando Axios.
- * @param config Configuração base do Axios (ex: { url: "/api/users", method: "POST" })
- * @returns [função de execução, estado da mutação]
- */
 export function useAxiosMutation<T = any, V = any>(
   config: AxiosRequestConfig
 ): [MutationFunction<T, V>, MutationState<T>] {
@@ -34,7 +30,7 @@ export function useAxiosMutation<T = any, V = any>(
           ...(options?.variables ? { data: options.variables } : {}),
         };
 
-        const response = await axios(mergedConfig);
+        const response = await apiClient<T>(mergedConfig);
         setData(response.data);
         return response;
       } catch (err: any) {

@@ -32,7 +32,7 @@ export const navigation: NavigationItem[] = [
   },
   {
     name: "Órgãos",
-    href: "/dashboard/orgaos",
+    href: routes.dashboard.organs.path,
     icon: HeartIcon,
     current: false,
     roles: [RoleEnum.ADMIN, RoleEnum.USER],

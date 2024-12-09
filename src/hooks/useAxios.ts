@@ -48,8 +48,7 @@ export function useAxios<T = any>(
         abortController.current.abort();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [JSON.stringify(initialConfig)]);
 
   return { data, error, isLoading, refetch: fetchData };
 }

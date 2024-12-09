@@ -28,28 +28,29 @@ const apiRoutes = {
     show: { path: "/hospitals/:id", method: "GET" },
     choose: { path: "/hospitals/choose-hospitals", method: "POST" },
     admin: {
-      list: { path: "/admin/hospitals", method: "GET" },
-      show: { path: "/admin/hospitals/:id", method: "GET" },
-      create: { path: "/admin/hospitals", method: "POST" },
+      list: { path: "/manager/hospitals", method: "GET" },
+      show: { path: "/manager/hospitals/:id", method: "GET" },
+      create: { path: "/manager/hospitals", method: "POST" },
       assignPatient: {
-        path: "/admin/hospitals/assign-patient",
+        path: "/manager/hospitals/assign-patient",
         method: "POST",
       },
-      update: { path: "/admin/hospitals/:id", method: "PATCH" },
+      update: { path: "/manager/hospitals/:id", method: "PATCH" },
     },
   },
 
   organs: {
     listPatientOrgans: {
-      path: "/organs/patient-organs/:patientId?",
+      path: "/organs/patient-organs/",
       method: "GET",
     },
     choose: { path: "/organs/choose-organs", method: "POST" },
+    allocate: { path: "/organs/all", method: "GET" },
     admin: {
-      list: { path: "/admin/organs", method: "GET" },
-      show: { path: "/admin/organs/:id", method: "GET" },
-      create: { path: "/admin/organs", method: "POST" },
-      update: { path: "/admin/organs/:id", method: "PATCH" },
+      list: { path: "/manager/organs", method: "GET" },
+      show: { path: "/manager/organs/:id", method: "GET" },
+      create: { path: "/manager/organs", method: "POST" },
+      update: { path: "/manager/organs/:id", method: "PATCH" },
     },
   },
 
