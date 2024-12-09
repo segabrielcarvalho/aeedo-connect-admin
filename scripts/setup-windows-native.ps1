@@ -97,14 +97,17 @@ if (Test-Path "apps") {
     }
 }
 
-New-Item -ItemType Directory -Name "apps" -ErrorAction Stop | Out-Null
+if (!(Test-Path "apps")) {
+    New-Item -ItemType Directory -Name "apps" -ErrorAction Stop | Out-Null
+}
+
 Set-Location "apps"
 
 $repos = @(
-    "git@github.com:segabrielcarvalho/aeedo-connect-api.git",
-    "git@github.com:segabrielcarvalho/aeedo-connect-web.git",
-    "git@github.com:segabrielcarvalho/aeedo-connect-doc.git",
-    "git@github.com:segabrielcarvalho/aeedo-connect-admin.git"
+    "https://github.com/segabrielcarvalho/aeedo-connect-api.git",
+    "https://github.com/segabrielcarvalho/aeedo-connect-web.git",
+    "https://github.com/segabrielcarvalho/aeedo-connect-doc.git",
+    "https://github.com/segabrielcarvalho/aeedo-connect-admin.git"
 )
 
 Write-Color "Clonando os repositórios..." Cyan
@@ -195,24 +198,24 @@ for ($i = 0; $i -lt $apps.Count; $i++) {
         $newContent | Set-Content "docker-compose.yml"
 
         Write-Color "Instalando dependências do Composer via Docker..." Cyan
-        docker run --rm -u "$(id -u):$(id -g)" -v (Get-Location):/var/www/html -w /var/www/html laravelsail/php84-composer:latest composer install --ignore-platform-reqs
+        docker run --rm -v "$($PWD.Path):/var/www/html" -w /var/www/html laravelsail/php84-composer:latest composer install --ignore-platform-reqs
         if ($LASTEXITCODE -ne 0) {
             Write-Color "Erro ao instalar dependências do Composer." Red
             exit 1
         }
 
+        # Parar containers e remover volumes existentes (se houverem)
         Write-Color "Parando e removendo containers e volumes existentes..." Cyan
-        if (Test-Path "vendor/bin/sail") {
-            .\vendor\bin\sail down -v
-        } else {
-            docker run --rm -v (Get-Location):/var/www/html -w /var/www/html laravelsail/php84-composer:latest composer install --ignore-platform-reqs
-            .\vendor\bin\sail down -v
+        docker-compose down -v
+        if ($LASTEXITCODE -ne 0) {
+            Write-Color "Erro ao parar/remover containers." Red
+            exit 1
         }
 
-        Write-Color "Iniciando os containers com o Sail..." Cyan
-        .\vendor\bin\sail up -d
+        Write-Color "Iniciando os containers com Docker Compose..." Cyan
+        docker-compose up -d
         if ($LASTEXITCODE -ne 0) {
-            Write-Color "Erro ao iniciar os containers com o Sail." Red
+            Write-Color "Erro ao iniciar os containers com o Docker Compose." Red
             exit 1
         }
 
@@ -225,8 +228,8 @@ for ($i = 0; $i -lt $apps.Count; $i++) {
         $DB_PASSWORD = Get-EnvVariableFromFile ".env" "DB_PASSWORD"
 
         while ($RETRIES -lt $MAX_RETRIES) {
-            $cmdCheck = ".\vendor\bin\sail exec mysql mysqladmin ping -h $DB_HOST -u $DB_USERNAME --password=$DB_PASSWORD --silent"
-            $checkResult = powershell -NoProfile -Command $cmdCheck
+            # Testando conexão com o MySQL dentro do container
+            docker-compose exec mysql mysqladmin ping -h $DB_HOST -u $DB_USERNAME --password=$DB_PASSWORD --silent
             if ($LASTEXITCODE -eq 0) {
                 break
             }
@@ -241,27 +244,28 @@ for ($i = 0; $i -lt $apps.Count; $i++) {
         }
 
         Write-Color "Banco de dados está pronto! Continuando..." Green
+
         Write-Color "Limpando cache de configuração e aplicação..." Cyan
-        .\vendor\bin\sail artisan config:clear
+        docker-compose exec laravel.test php artisan config:clear
         if ($LASTEXITCODE -ne 0) {
             Write-Color "Erro ao limpar cache de configuração." Red
             exit 1
         }
-        .\vendor\bin\sail artisan cache:clear
+        docker-compose exec laravel.test php artisan cache:clear
         if ($LASTEXITCODE -ne 0) {
             Write-Color "Erro ao limpar cache de aplicação." Red
             exit 1
         }
 
         Write-Color "Executando migrações..." Cyan
-        .\vendor\bin\sail artisan migrate --force
+        docker-compose exec laravel.test php artisan migrate --force
         if ($LASTEXITCODE -ne 0) {
             Write-Color "Erro ao executar migrações." Red
             exit 1
         }
 
         Write-Color "Executando seeders..." Cyan
-        .\vendor\bin\sail artisan db:seed --force
+        docker-compose exec laravel.test php artisan db:seed --force
         if ($LASTEXITCODE -ne 0) {
             Write-Color "Erro ao executar seeders." Red
             exit 1
