@@ -30,6 +30,7 @@ interface MeContextType {
   } | null;
   organsPatientData?: Organ[] | null;
   systemData?: Organ[] | null;
+  systemHospitals?: Hospital[] | null;
   isLoading: boolean;
   refetchDetails: () => void;
   refetchOrgansPatientData: () => void;
@@ -43,6 +44,11 @@ type MeContextProviderProps = { children: ReactNode };
 export function MeContextProvider({ children }: MeContextProviderProps) {
   const { user } = useAuthContext();
   const patientId = user?.patientId;
+
+  const { data: systemHospitals } = useAxios({
+    url: apiRoutes.hospitals.list.path,
+    method: apiRoutes.hospitals.list.method,
+  });
 
   const [executeDetails, { data: patientDetailsData, isLoading }] =
     useLazyAxios<PatientDetailsResponse["data"]>();
@@ -91,6 +97,7 @@ export function MeContextProvider({ children }: MeContextProviderProps) {
     organsPatientData,
     systemData,
     isLoading,
+    systemHospitals,
     refetchDetails: fetchPatientDetails,
     refetchOrgansPatientData,
     refetchSystemData,
