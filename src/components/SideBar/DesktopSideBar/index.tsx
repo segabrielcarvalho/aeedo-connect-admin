@@ -3,8 +3,10 @@ import { Logo } from "@/components/Logo";
 import { useAuthContext } from "@/contexts/AuthContext";
 import classNames from "@/utils/classnames";
 import Image from "next/image";
+import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { TbLogout2 } from "react-icons/tb";
+import routes from "../../../routes";
 import Can from "../../Can";
 import { navigation, secondaryNavigation } from "../constants";
 
@@ -100,8 +102,8 @@ const DesktopSideBar = () => {
         </nav>
 
         <div className="mb-10">
-          <a
-            href="#"
+          <NextLink
+            href={routes.dashboard.me.path}
             className="group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold items-center"
           >
             <Image
@@ -112,7 +114,7 @@ const DesktopSideBar = () => {
               className="inline-block size-10 rounded-full"
             />
             {user?.name}
-          </a>
+          </NextLink>
 
           <span
             onClick={signOut}

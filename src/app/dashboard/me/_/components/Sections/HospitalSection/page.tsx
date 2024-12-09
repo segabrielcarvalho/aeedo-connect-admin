@@ -1,9 +1,9 @@
 "use client";
 
 import Button from "@/components/Button";
+import SectionHeading from "@/components/SectionHeading";
 import React from "react";
-import SectionHeading from "../../../../../../../components/SectionHeading";
-import { HospitalField } from "../../../../../hospitals/[hospitalId]/_/components/HospitalField";
+import { HospitalField } from "../../HospitalField";
 
 export interface Hospital {
   id: number;

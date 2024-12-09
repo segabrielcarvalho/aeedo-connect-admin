@@ -1,9 +1,14 @@
 import dynamic from "next/dynamic";
+import { MeContextProvider } from "./_/Context/MeContext";
 
-const ShowUser = dynamic<Record<string, never>>(() =>
-  import("./_/index").then((x) => x.ShowUser)
+const Me = dynamic<Record<string, never>>(() =>
+  import("./_/index").then((x) => x.Me)
 );
 
-export default function ShowUserPage() {
-  return <ShowUser />;
+export default function MePage() {
+  return (
+    <MeContextProvider>
+      <Me />
+    </MeContextProvider>
+  );
 }

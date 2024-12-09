@@ -1,19 +1,19 @@
 import Button from "@/components/Button";
 import SectionHeading from "@/components/SectionHeading";
 import React from "react";
-import { AddressField } from "../../../../../users/[userId]/_/components/AddressField";
+import { AddressField } from "../../AddressField";
 
 const AddressSection: React.FC = () => {
   const addresses = [
     {
       id: 1,
-      zipCode: "38400-124",
-      street: "Av. Joao Pinheiro",
-      neighborhood: "Julio César",
-      state: "MG",
-      city: "Uberlândia",
-      houseNumber: "289",
-      complement: "Big building",
+      zipCode: "12345-678",
+      street: "Rua das Flores",
+      neighborhood: "Jardim Primavera",
+      state: "SP",
+      city: "São Paulo",
+      houseNumber: "100",
+      complement: "Apt 202",
       createdAt: "2023-11-29T10:00:00Z",
     },
   ];

@@ -1,9 +1,10 @@
 "use client";
 
 import Button from "@/components/Button";
+import Can from "@/components/Can";
 import SectionHeading from "@/components/SectionHeading";
 import { RoleEnum, useAuthContext } from "@/contexts/AuthContext";
-import routes from "../../../../routes";
+import routes from "@/routes";
 import OrgansTable from "./components/OrgansTable";
 import { OrgansUsersTable } from "./components/OrgansUsersTable";
 
@@ -18,13 +19,15 @@ export const Organs = () => {
             title="Órgãos"
             description="Gerencie os órgãos da plataforma"
           >
-            <Button
-              href={routes.dashboard.organs.create.path}
-              variant="solid"
-              color="secondary"
-            >
-              Adicionar Órgão
-            </Button>
+            <Can roles={[RoleEnum.ADMIN]}>
+              <Button
+                href={routes.dashboard.organs.create.path}
+                variant="solid"
+                color="secondary"
+              >
+                Adicionar Órgão
+              </Button>
+            </Can>
           </SectionHeading>
 
           {user?.role === RoleEnum.USER ? (
