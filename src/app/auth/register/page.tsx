@@ -1,7 +1,10 @@
 "use client";
 import Button from "@/components/Button";
 import { Input } from "@/components/Form/Input";
+import SelectInput from "@/components/Form/SelectInput";
 import { Logo } from "@/components/Logo";
+import { PasswordStrengthBar } from "@/components/PasswordStrengthBar";
+import RoleButton from "@/components/RoleButton";
 import { RoleEnum, RolePatientEnum } from "@/contexts/AuthContext";
 import { BloodTypeEnum } from "@/dto/global";
 import { useAxiosMutation } from "@/hooks/useAxiosMutation";
@@ -12,9 +15,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import SelectInput from "../../../components/Form/SelectInput";
-import { PasswordStrengthBar } from "./_/components/PasswordStrongBar";
-import RoleButton from "./_/components/RoleButton";
 import {
   CreatePatientResponse,
   createPatientSchema,
@@ -98,7 +98,7 @@ const RegisterPage = () => {
           onSelect={(role) => setValue("patient_type", role)}
         />
         <RoleButton
-          role={RolePatientEnum.RECEIVER}
+          role={RolePatientEnum.RECIPIENT}
           selectedRole={selectedRole}
           onSelect={(role) => setValue("patient_type", role)}
         />

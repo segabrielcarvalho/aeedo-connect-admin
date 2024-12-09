@@ -1,11 +1,12 @@
+import { UseFormSetValue } from "react-hook-form";
 import { z } from "zod";
-import { RolePatientEnum } from "../../../../../contexts/AuthContext";
+import { RolePatientEnum } from "../../../../../../contexts/AuthContext";
 
 const organSchema = z.object({
   id: z.string().uuid("O ID do órgão deve ser um UUID válido."),
 });
 
-export const createPatientSchema = z
+export const createUserSchema = z
   .object({
     name: z
       .string()
@@ -23,19 +24,46 @@ export const createPatientSchema = z
         "A senha deve conter pelo menos uma letra maiúscula, uma letra minúscula, um número e um caractere especial."
       ),
     confirmPassword: z.string().min(1, "A confirmação de senha é obrigatória."),
-    role: z.string().optional(),
-    patient_type: z.enum(["donor", "recipient"]).nullable(),
-    blood_type: z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]),
-    organs: z.array(organSchema).default([]),
+    role: z.enum(["admin", "user"]).default("admin"),
+    patient_type: z.enum(["donor", "recipient"]).nullable().optional(),
+    blood_type: z
+      .enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
+      .optional(),
+    organs: z.array(organSchema).optional(),
   })
+  .refine(
+    (data) => {
+      if (data.role === "admin") {
+        return true;
+      }
+      return data.patient_type !== null && !!data.blood_type;
+    },
+    {
+      message:
+        "Para usuários do tipo 'user', os campos tipo de paciente e tipo sanguíneo são obrigatórios.",
+      path: ["patient_type"],
+    }
+  )
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não coincidem.",
     path: ["confirmPassword"],
   });
 
-export type CreatePatientVariables = z.infer<typeof createPatientSchema>;
+export type CreateUserVariables = z.infer<typeof createUserSchema>;
 
-interface PatientDetails {
+export interface OrganResponse {
+  id: string;
+  name: string;
+  organType: string;
+  slug: string;
+}
+
+export interface OrgansListProps {
+  setValue: UseFormSetValue<CreateUserVariables>;
+  selectedOrgans: { id: string }[];
+}
+
+interface UserDetails {
   patientType: RolePatientEnum;
   bloodType: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
 }
@@ -45,7 +73,7 @@ interface Organ {
   organType: string;
 }
 
-export interface CreatePatientResponse {
+export interface CreateUserResponse {
   data: {
     name: string;
     email: string;
@@ -53,7 +81,7 @@ export interface CreatePatientResponse {
     document: string | null;
     role: string;
     birthDate: string | null;
-    patient: PatientDetails;
+    patient: UserDetails;
     organs: Organ[];
   };
 }

@@ -1,73 +1,71 @@
 "use client";
+
 import Button from "@/components/Button";
 import { Input } from "@/components/Form/Input";
+import { PasswordStrengthBar } from "@/components/PasswordStrengthBar";
+import RoleButton from "@/components/RoleButton";
 import SectionHeading from "@/components/SectionHeading";
 import SelectableButton from "@/components/SelectableButton";
+import { RoleEnum, RolePatientEnum } from "@/contexts/AuthContext";
+import { BloodTypeEnum } from "@/dto/global";
+import { useAxiosMutation } from "@/hooks/useAxiosMutation";
 import useToastHook from "@/hooks/useToastHook";
 import routes from "@/routes";
+import apiRoutes from "@/routes/api";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import { BiDetail } from "react-icons/bi";
-import { BsLungs } from "react-icons/bs";
-import {
-  FaHandHoldingHeart,
-  FaRegEye,
-  FaRegHandshake,
-  FaRegUser,
-} from "react-icons/fa";
-import { FaHeart } from "react-icons/fa6";
-import {
-  GiInternalOrgan,
-  GiKidneys,
-  GiLiver,
-  GiTiedScroll,
-  GiValve,
-} from "react-icons/gi";
+import { FaRegUser } from "react-icons/fa";
 import { GrUserAdmin } from "react-icons/gr";
-import { IoWaterOutline } from "react-icons/io5";
-import { LuBone, LuBrain } from "react-icons/lu";
-import { CreateUserVariables } from "./_/dto";
+import OrgansList from "./_/components/OrgansList";
+import {
+  CreateUserResponse,
+  createUserSchema,
+  CreateUserVariables,
+} from "./_/dto";
 
 const CreateUserPage: React.FC = () => {
   const router = useRouter();
   const { error, success } = useToastHook();
-  const { control, reset, handleSubmit, watch, setValue } =
-    useForm<CreateUserVariables>();
 
-  const role = watch("data.role");
-  const patientType = watch("data.patientType");
-  const selectedOrgans = watch("data.organs") || [];
+  const [submit, { loading }] = useAxiosMutation<
+    CreateUserResponse,
+    CreateUserVariables
+  >({
+    url: apiRoutes.users.register.path,
+    method: apiRoutes.users.register.method,
+  });
 
-  const organIcons = {
-    Coração: <FaHeart className="w-8 h-8 text-red-500" />,
-    Pulmão: <BsLungs className="w-8 h-8 text-blue-500" />,
-    Rim: <GiKidneys className="w-8 h-8 text-purple-500" />,
-    Fígado: <GiLiver className="w-8 h-8 text-orange-500" />,
-    Pâncreas: <GiInternalOrgan className="w-8 h-8 text-yellow-500" />,
-    Intestino: <GiInternalOrgan className="w-8 h-8 text-green-500" />,
-    "Medula Óssea": <LuBrain className="w-8 h-8 text-gray-500" />,
-    Córnea: <FaRegEye className="w-8 h-8 text-blue-400" />,
-    Pele: <IoWaterOutline className="w-8 h-8 text-pink-400" />,
-    Ossos: <LuBone className="w-8 h-8 text-gray-400" />,
-    Cartilagem: <BiDetail className="w-8 h-8 text-teal-500" />,
-    Tendões: <GiTiedScroll className="w-8 h-8 text-yellow-600" />,
-    "Válvulas Cardíacas": <GiValve className="w-8 h-8 text-red-400" />,
-  };
-  const organsList = Object.keys(organIcons);
+  const {
+    control,
+    reset,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<CreateUserVariables>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      role: undefined,
+      patient_type: undefined,
+      blood_type: BloodTypeEnum.APositive,
+      organs: [],
+      confirmPassword: "",
+    },
+  });
 
-  const toggleOrganSelection = (organ: string) => {
-    setValue(
-      "data.organs",
-      selectedOrgans.includes(organ)
-        ? selectedOrgans.filter((o) => o !== organ)
-        : [...selectedOrgans, organ]
-    );
-  };
+  const role = watch("role");
+  const patientType = watch("patient_type");
+  const selectedOrgans = watch("organs") || [];
 
   const submitImplementation: SubmitHandler<CreateUserVariables> = async (
     args
   ) => {
     try {
+      await submit({ variables: args });
       success({ message: "Usuário criado com sucesso." });
       reset();
       router.push(routes.dashboard.users.path);
@@ -93,30 +91,34 @@ const CreateUserPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-y-6">
           <Controller
             control={control}
-            name="data.name"
-            render={({ field: { name, onChange, ref } }) => (
+            name="name"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 label="Nome Completo"
                 placeholder='Ex: "Maria Silva"'
                 name={name}
                 isRequired
+                error={errors?.name}
               />
             )}
           />
 
           <Controller
             control={control}
-            name="data.email"
-            render={({ field: { name, onChange, ref } }) => (
+            name="email"
+            render={({ field: { name, onChange, ref, value } }) => (
               <Input
                 ref={ref}
                 onChange={onChange}
+                value={value}
                 label="Email"
                 placeholder='Ex: "user@user.com"'
                 name={name}
                 isRequired
+                error={errors?.email}
               />
             )}
           />
@@ -125,26 +127,43 @@ const CreateUserPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-y-6">
           <Controller
             control={control}
-            name="data.password"
-            render={({ field: { name, onChange, ref } }) => (
-              <Input
-                ref={ref}
-                onChange={onChange}
-                type="password"
-                label="Senha"
-                placeholder="Digite uma senha"
-                name={name}
-                isRequired
-              />
+            name="password"
+            render={({ field: { name, onChange, ref, value } }) => (
+              <div className="space-y-3">
+                <Input
+                  ref={ref}
+                  onChange={onChange}
+                  value={value}
+                  type="password"
+                  label="Senha"
+                  placeholder="Digite uma senha"
+                  name={name}
+                  isRequired
+                  error={errors?.password}
+                />
+                <PasswordStrengthBar password={value} />
+              </div>
             )}
           />
 
-          <Input
+          <Controller
+            control={control}
             name="confirmPassword"
-            type="password"
-            label="Senha"
-            placeholder="Digite uma senha"
-            isRequired
+            render={({ field: { name, onChange, ref, value } }) => (
+              <div className="space-y-3">
+                <Input
+                  ref={ref}
+                  onChange={onChange}
+                  value={value}
+                  type="password"
+                  label="Confirmar Senha"
+                  placeholder="Confirme sua senha"
+                  name={name}
+                  isRequired
+                  error={errors.confirmPassword}
+                />
+              </div>
+            )}
           />
         </div>
       </div>
@@ -158,13 +177,13 @@ const CreateUserPage: React.FC = () => {
           <SelectableButton
             isSelected={role === "admin"}
             label="Administrador"
-            onClick={() => setValue("data.role", "admin")}
+            onClick={() => setValue("role", RoleEnum.ADMIN)}
             icon={<GrUserAdmin className="w-7 h-7 font-thin" />}
           />
           <SelectableButton
             isSelected={role === "user"}
             label="Usuário"
-            onClick={() => setValue("data.role", "user")}
+            onClick={() => setValue("role", RoleEnum.USER)}
             icon={<FaRegUser className="w-8 h-8" />}
           />
         </div>
@@ -178,40 +197,27 @@ const CreateUserPage: React.FC = () => {
               description="Selecione o tipo de paciente."
             />
 
-            <div className="grid grid-cols-7 gap-4">
-              <SelectableButton
-                isSelected={patientType === "doador"}
-                label="Doador"
-                onClick={() => setValue("data.patientType", "doador")}
-                icon={<FaHandHoldingHeart className="w-8 h-8" />}
+            <div className="grid grid-cols-2 gap-10 mt-8">
+              <RoleButton
+                role={RolePatientEnum.DONOR}
+                selectedRole={patientType}
+                onSelect={(role) => setValue("patient_type", role)}
               />
-              <SelectableButton
-                isSelected={patientType === "receptor"}
-                label="Receptor"
-                onClick={() => setValue("data.patientType", "receptor")}
-                icon={<FaRegHandshake className="w-8 h-8" />}
+              <RoleButton
+                role={RolePatientEnum.RECIPIENT}
+                selectedRole={patientType}
+                onSelect={(role) => setValue("patient_type", role)}
               />
             </div>
+            {errors?.patient_type && (
+              <p className="text-red-500 text-sm">
+                {errors.patient_type.message}
+              </p>
+            )}
           </div>
 
           {patientType && (
-            <div className="grid grid-cols-1 gap-8">
-              <SectionHeading
-                title="Seleção de Órgãos"
-                description="Escolha os órgãos associados ao paciente."
-              />
-              <div className="grid grid-cols-7 gap-4">
-                {organsList.map((organ) => (
-                  <SelectableButton
-                    key={organ}
-                    isSelected={selectedOrgans.includes(organ)}
-                    label={organ}
-                    onClick={() => toggleOrganSelection(organ)}
-                    icon={organIcons[organ as keyof typeof organIcons]}
-                  />
-                ))}
-              </div>
-            </div>
+            <OrgansList setValue={setValue} selectedOrgans={selectedOrgans} />
           )}
         </>
       )}
@@ -231,6 +237,7 @@ const CreateUserPage: React.FC = () => {
           color="secondary"
           className="rounded-md px-12"
           type="submit"
+          isLoading={loading}
         >
           Criar
         </Button>

@@ -1,7 +1,7 @@
+import { RolePatientEnum } from "@/contexts/AuthContext";
 import { HeartIcon } from "@heroicons/react/16/solid";
 import { GiftIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
-import { RolePatientEnum } from "../../../../../contexts/AuthContext";
 
 interface RoleButtonProps {
   role: RolePatientEnum;

@@ -23,10 +23,9 @@ export enum RoleEnum {
   ADMIN = "admin",
   USER = "user",
 }
-
 export enum RolePatientEnum {
   DONOR = "donor",
-  RECEIVER = "receiver",
+  RECIPIENT = "recipient",
 }
 
 export interface User {
