@@ -80,19 +80,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [executeSignIn] = useLazyAxios<LoginOutput>();
   const [executeSignOut] = useLazyAxios();
 
-  const [storedSub, setStoredSub] = useLocalStorageState<string>({
+  const [storedSub, setStoredSub] = useLocalStorageState<string | null>({
     key: "auth-sub",
     initialValue: "",
     saveToLocalStorage: true,
   });
 
-  const [storedRole, setStoredRole] = useLocalStorageState<RoleEnum>({
+  const [storedRole, setStoredRole] = useLocalStorageState<RoleEnum | null>({
     key: "auth-role",
     initialValue: RoleEnum.USER,
     saveToLocalStorage: true,
   });
 
-  const [storedName, setStoredName] = useLocalStorageState<string>({
+  const [storedName, setStoredName] = useLocalStorageState<string | null>({
     key: "auth-name",
     initialValue: "",
     saveToLocalStorage: true,
@@ -183,15 +183,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       nookies.destroy(null, "access_token");
       nookies.destroy(null, "token_type");
 
-      setStoredSub("");
-      setStoredRole(RoleEnum.USER);
-      setStoredName("");
+      localStorage.removeItem("auth-sub");
+      localStorage.removeItem("auth-role");
+      localStorage.removeItem("auth-name");
+
       setUser(null);
 
       router.push(routes.auth.login.path);
       setIsLoadingUser(false);
     }
-  }, [executeSignOut, router, setStoredSub, setStoredRole, setStoredName]);
+  }, [executeSignOut, router]);
 
   useEffect(() => {
     const cookies = nookies.get(null);

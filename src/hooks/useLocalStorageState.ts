@@ -53,10 +53,14 @@ const useLocalStorageState = function <T>({
       if (!saveToLocalStorage) return;
 
       try {
-        const dataToSave = serializeDataToLocalStorageFn
-          ? serializeDataToLocalStorageFn(newValue)
-          : newValue;
-        localStorage.setItem(key, JSON.stringify(dataToSave));
+        if (newValue === null || newValue === undefined) {
+          localStorage.removeItem(key);
+        } else {
+          const dataToSave = serializeDataToLocalStorageFn
+            ? serializeDataToLocalStorageFn(newValue)
+            : newValue;
+          localStorage.setItem(key, JSON.stringify(dataToSave));
+        }
       } catch (error) {
         console.error(
           `Erro ao salvar no localStorage para a chave "${key}":`,
