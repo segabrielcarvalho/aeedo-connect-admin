@@ -101,14 +101,6 @@ envExamples=(
   "../../envs/.env.admin.example"
 )
 
-function is_port_in_use() {
-  local port=$1
-  if lsof -i :"$port" &> /dev/null; then
-    return 0
-  else
-    return 1
-  fi
-}
 
 declare -a APP_PORTS
 
@@ -149,11 +141,6 @@ for i in "${!apps[@]}"; do
 
     if [ -z "$APP_PORT" ]; then
       echo -e "${RED}Erro: Variável APP_PORT não encontrada no arquivo .env de ${app}.${RESET}"
-      exit 1
-    fi
-
-    if is_port_in_use "$APP_PORT"; then
-      echo -e "${RED}A porta ${APP_PORT} já está em uso. Por favor, libere a porta ou altere a configuração.${RESET}"
       exit 1
     fi
 

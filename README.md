@@ -12,10 +12,6 @@ Certifique-se de ter as seguintes ferramentas instaladas no seu ambiente:
 
 **Para Setup Local:**
 - [Node.js](https://nodejs.org/) com `npm`, `yarn` ou `pnpm`
-- [Composer](https://getcomposer.org/) para o Laravel
-- Banco de dados compatível com Laravel (MySQL ou outro definido no `.env.api`)
-
-**Para Setup com Docker:**
 - [Docker](https://docs.docker.com/get-docker/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 
@@ -53,7 +49,7 @@ Após o script finalizar o setup, navegue até o diretório do componente deseja
 
 ```bash
 cd apps/<nome_do_componente>
-$packageCommand run dev
+$packageCommand run start:dev
 ```
 
 Substitua `<nome_do_componente>` pelo componente que deseja rodar, como `aeedo-connect-web`, `aeedo-connect-doc` ou `aeedo-connect-admin`.
@@ -86,7 +82,7 @@ Este script fará perguntas semelhantes às do Linux/macOS, clonando os reposit�
 
 ```powershell
 cd apps\<nome_do_componente>
-$packageCommand run dev
+$packageCommand run start:dev
 ```
 
 Substitua `<nome_do_componente>` pelo componente que deseja rodar.
