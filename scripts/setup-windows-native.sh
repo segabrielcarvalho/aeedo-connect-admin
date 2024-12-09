@@ -1,31 +1,67 @@
-# Requires -Version 5.1
+Param()
 
-$RED = "`e[0;31m"
-$GREEN = "`e[0;32m"
-$YELLOW = "`e[1;33m"
-$BLUE = "`e[1;34m"
-$CYAN = "`e[1;36m"
-$BOLD = "`e[1m"
-$RESET = "`e[0m"
+function Write-Color {
+    param(
+        [Parameter(Mandatory=$true)] [string]$Message,
+        [string]$Color = "White",
+        [switch]$NoNewline
+    )
+    if ($NoNewline) {
+        Write-Host -NoNewline $Message -ForegroundColor $Color
+    } else {
+        Write-Host $Message -ForegroundColor $Color
+    }
+}
+
+function Command-Exists {
+    param([string]$CommandName)
+    $cmd = Get-Command $CommandName -ErrorAction SilentlyContinue
+    return $null -ne $cmd
+}
+
+function Is-Port-In-Use {
+    param([int]$Port)
+    $connections = [System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners()
+    foreach ($conn in $connections) {
+        if ($conn.Port -eq $Port) {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Get-EnvVariableFromFile {
+    param(
+        [string]$FilePath,
+        [string]$VarName
+    )
+    if (Test-Path $FilePath) {
+        $line = (Get-Content $FilePath | Where-Object {$_ -match "^$VarName="})
+        if ($line) {
+            return $line -replace "^$VarName=", ""
+        }
+    }
+    return $null
+}
 
 Write-Host ""
-Write-Host "${BOLD}${CYAN}Aeedo-Connect Setup (Windows)${RESET}"
+Write-Color "Aeedo-Connect Setup" Cyan
 
-$dependencies = @("git")
-foreach ($dep in $dependencies) {
-    if (-not (Get-Command $dep -ErrorAction SilentlyContinue)) {
-        Write-Host "${RED}Dependência '$dep' não encontrada. Por favor, instale '$dep' e tente novamente.${RESET}"
+$DEPENDENCIES = @("git")
+
+foreach ($dep in $DEPENDENCIES) {
+    if (!(Command-Exists $dep)) {
+        Write-Color "Dependência '$dep' não encontrada. Por favor, instale '$dep' e tente novamente." Red
         exit 1
     }
 }
 
 Write-Host ""
-Write-Host "${YELLOW}Qual gerenciador de pacotes deseja usar para instalar as dependências?${RESET}"
-Write-Host "1) ${BLUE}npm${RESET}"
-Write-Host "2) ${BLUE}yarn${RESET}"
-Write-Host "3) ${BLUE}pnpm${RESET}"
+Write-Color "Qual gerenciador de pacotes deseja usar para instalar as dependências?" Yellow
+Write-Color "1) npm" Blue
+Write-Color "2) yarn" Blue
+Write-Color "3) pnpm" Blue
 Write-Host ""
-
 $packageManager = Read-Host "Escolha sua opção (1, 2, 3)"
 
 switch ($packageManager) {
@@ -39,263 +75,236 @@ switch ($packageManager) {
         $packageCommand = "pnpm install"
     }
     default {
-        Write-Host "${RED}Opção inválida. Encerrando o setup.${RESET}"
+        Write-Color "Opção inválida. Encerrando o setup." Red
         exit 1
     }
 }
 
-# Checar se o gerenciador de pacotes está disponível
-$pkgCmdParts = $packageCommand.Split(" ")
-if (-not (Get-Command $pkgCmdParts[0] -ErrorAction SilentlyContinue)) {
-    Write-Host "${RED}Gerenciador de pacotes '$($pkgCmdParts[0])' não encontrado. Por favor, instale-o antes de continuar.${RESET}"
+$pkgCmdExec = ($packageCommand -split " ")[0]
+if (!(Command-Exists $pkgCmdExec)) {
+    Write-Color "Gerenciador de pacotes '$pkgCmdExec' não encontrado. Por favor, instale-o antes de continuar." Red
     exit 1
 }
 
-# Verificar se a pasta apps existe
 if (Test-Path "apps") {
-    Write-Host "${YELLOW}A pasta 'apps' já existe. Deseja removê-la e começar do zero? (s/n)${RESET}"
+    Write-Color "A pasta 'apps' já existe. Deseja removê-la e começar do zero? (s/n)" Yellow
     $removeApps = Read-Host "Sua escolha"
-    if ($removeApps -match '^[sS]$') {
-        Write-Host "${CYAN}Removendo a pasta 'apps'...${RESET}"
+    if ($removeApps -match "^[sS]$") {
+        Write-Color "Removendo a pasta 'apps'..." Cyan
         Remove-Item -Recurse -Force "apps" -ErrorAction Stop
     } else {
-        Write-Host "${YELLOW}Continuando com a pasta 'apps' existente.${RESET}"
+        Write-Color "Continuando com a pasta 'apps' existente." Yellow
     }
 }
 
-New-Item -ItemType Directory -Force -Name "apps" | Out-Null
+New-Item -ItemType Directory -Name "apps" -ErrorAction Stop | Out-Null
 Set-Location "apps"
 
 $repos = @(
-  "git@github.com:segabrielcarvalho/aeedo-connect-api.git",
-  "git@github.com:segabrielcarvalho/aeedo-connect-web.git",
-  "git@github.com:segabrielcarvalho/aeedo-connect-doc.git",
-  "git@github.com:segabrielcarvalho/aeedo-connect-admin.git"
+    "git@github.com:segabrielcarvalho/aeedo-connect-api.git",
+    "git@github.com:segabrielcarvalho/aeedo-connect-web.git",
+    "git@github.com:segabrielcarvalho/aeedo-connect-doc.git",
+    "git@github.com:segabrielcarvalho/aeedo-connect-admin.git"
 )
 
-Write-Host "${CYAN}Clonando os repositórios...${RESET}"
+Write-Color "Clonando os repositórios..." Cyan
 foreach ($repo in $repos) {
     $repo_name = [System.IO.Path]::GetFileNameWithoutExtension($repo)
-    if (-not (Test-Path $repo_name)) {
-        Write-Host "${YELLOW}Clonando $repo...${RESET}"
+    if (!(Test-Path $repo_name)) {
+        Write-Color "Clonando $repo..." Yellow
         git clone $repo
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "${RED}Erro ao clonar $repo. Verifique sua conexão ou permissões do Git.${RESET}"
+            Write-Color "Erro ao clonar $repo. Verifique sua conexão ou permissões do Git." Red
             exit 1
         }
     } else {
-        Write-Host "${GREEN}Repositório $repo_name já existe. Pulando clonagem.${RESET}"
+        Write-Color "Repositório $repo_name já existe. Pulando clonagem." Green
     }
 }
 
-$apps = @("aeedo-connect-api", "aeedo-connect-web", "aeedo-connect-doc", "aeedo-connect-admin")
-$envExamples = @(
-  "../../envs/.env.api.example",
-  "../../envs/.env.web.example",
-  "../../envs/.env.doc.example",
-  "../../envs/.env.admin.example"
+$apps = @(
+    "aeedo-connect-api",
+    "aeedo-connect-web",
+    "aeedo-connect-doc",
+    "aeedo-connect-admin"
 )
 
-function Is-Port-In-Use {
-    param($Port)
-    $test = Test-NetConnection -Port $Port -ComputerName 'localhost'
-    return ($test.TcpTestSucceeded -eq $true)
-}
+$envExamples = @(
+    "..\..\envs\.env.api.example",
+    "..\..\envs\.env.web.example",
+    "..\..\envs\.env.doc.example",
+    "..\..\envs\.env.admin.example"
+)
 
-$APP_PORTS = New-Object System.Collections.ArrayList
+$APP_PORTS = @()
 
 for ($i = 0; $i -lt $apps.Count; $i++) {
     $app = $apps[$i]
-    $env = $envExamples[$i]
+    $envExample = $envExamples[$i]
 
-    Write-Host "${YELLOW}Configurando $app...${RESET}"
-
+    Write-Color "Configurando $app..." Yellow
     Set-Location $app
 
     if ($app -eq "aeedo-connect-api") {
-        # Checar Docker
-        if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-            Write-Host "${RED}Docker não encontrado. Instale o Docker para continuar.${RESET}"
+        if (!(Command-Exists "docker")) {
+            Write-Color "Docker não encontrado. Instale o Docker para continuar." Red
             exit 1
         }
 
-        if (-not (Test-Path ".env")) {
-            Copy-Item $env ".env"
+        if (!(Test-Path ".env")) {
+            Copy-Item $envExample ".env"
             if ($LASTEXITCODE -ne 0) {
-                Write-Host "${RED}Erro ao copiar o arquivo .env para $app.${RESET}"
+                Write-Color "Erro ao copiar o arquivo .env para $app." Red
                 exit 1
             }
-            Write-Host "${GREEN}.env configurado para $app.${RESET}"
+            Write-Color ".env configurado para $app." Green
         } else {
-            Write-Host "${YELLOW}Arquivo .env já existe para $app. Deseja sobrescrevê-lo? (s/n)${RESET}"
+            Write-Color "Arquivo .env já existe para $app. Deseja sobrescrevê-lo? (s/n)" Yellow
             $overwriteEnv = Read-Host "Sua escolha"
-            if ($overwriteEnv -match '^[sS]$') {
-                Copy-Item $env ".env" -Force
+            if ($overwriteEnv -match "^[sS]$") {
+                Copy-Item $envExample ".env" -Force
                 if ($LASTEXITCODE -ne 0) {
-                    Write-Host "${RED}Erro ao copiar o arquivo .env para $app.${RESET}"
+                    Write-Color "Erro ao copiar o arquivo .env para $app." Red
                     exit 1
                 }
-                Write-Host "${GREEN}.env sobrescrito para $app.${RESET}"
+                Write-Color ".env sobrescrito para $app." Green
             } else {
-                Write-Host "${YELLOW}Mantendo o arquivo .env existente para $app.${RESET}"
+                Write-Color "Mantendo o arquivo .env existente para $app." Yellow
             }
         }
 
-        if (-not (Test-Path ".env")) {
-            Write-Host "${RED}Erro: Arquivo .env não encontrado para $app.${RESET}"
+        if (!(Test-Path ".env")) {
+            Write-Color "Erro: Arquivo .env não encontrado para $app." Red
             exit 1
         }
 
-        $APP_PORT = (Get-Content ".env" | Where-Object {$_ -match "^APP_PORT="}) -replace "APP_PORT=", ""
-
+        $APP_PORT = Get-EnvVariableFromFile ".env" "APP_PORT"
         if ([string]::IsNullOrEmpty($APP_PORT)) {
-            Write-Host "${RED}Erro: Variável APP_PORT não encontrada no arquivo .env de $app.${RESET}"
+            Write-Color "Erro: Variável APP_PORT não encontrada no arquivo .env de $app." Red
             exit 1
         }
 
-        if (Is-Port-In-Use $APP_PORT) {
-            Write-Host "${RED}A porta $APP_PORT já está em uso. Por favor, libere a porta ou altere a configuração.${RESET}"
+        Write-Color "Atualizando docker-compose.yml para mapear a porta $APP_PORT..." Cyan
+        if (!(Test-Path "docker-compose.yml")) {
+            Write-Color "Erro: docker-compose.yml não encontrado." Red
             exit 1
         }
 
-        Write-Host "${CYAN}Atualizando docker-compose.yml para mapear a porta $APP_PORT...${RESET}"
-        $dockerComposeContent = (Get-Content "docker-compose.yml") -replace "80:80","$APP_PORT:80"
-        $dockerComposeContent | Set-Content "docker-compose.yml"
+        $dockerComposeContent = Get-Content "docker-compose.yml"
+        $newContent = $dockerComposeContent -replace "80:80", "$APP_PORT:80"
+        $newContent | Set-Content "docker-compose.yml"
 
-        Write-Host "${CYAN}Instalando dependências do Composer via Docker...${RESET}"
+        Write-Color "Instalando dependências do Composer via Docker..." Cyan
         docker run --rm -u "$(id -u):$(id -g)" -v (Get-Location):/var/www/html -w /var/www/html laravelsail/php84-composer:latest composer install --ignore-platform-reqs
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "${RED}Erro ao instalar dependências do Composer.${RESET}"
+            Write-Color "Erro ao instalar dependências do Composer." Red
             exit 1
         }
 
-        # Dar permissão de execução (no Windows isso pode ser ignorado)
-        # No Windows não é necessário chmod
-        # sail down -v
-        Write-Host "${CYAN}Parando e removendo containers e volumes existentes...${RESET}"
-        .\vendor\bin\sail down -v
+        Write-Color "Parando e removendo containers e volumes existentes..." Cyan
+        if (Test-Path "vendor/bin/sail") {
+            .\vendor\bin\sail down -v
+        } else {
+            docker run --rm -v (Get-Location):/var/www/html -w /var/www/html laravelsail/php84-composer:latest composer install --ignore-platform-reqs
+            .\vendor\bin\sail down -v
+        }
 
-        Write-Host "${CYAN}Iniciando os containers com o Sail...${RESET}"
+        Write-Color "Iniciando os containers com o Sail..." Cyan
         .\vendor\bin\sail up -d
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "${RED}Erro ao iniciar os containers com o Sail.${RESET}"
+            Write-Color "Erro ao iniciar os containers com o Sail." Red
             exit 1
         }
 
-        Write-Host "${CYAN}Aguardando o banco de dados estar pronto...${RESET}"
+        Write-Color "Aguardando o banco de dados estar pronto..." Cyan
         $MAX_RETRIES = 60
         $RETRIES = 0
-        $DB_HOST = (Get-Content ".env" | Where-Object {$_ -match "^DB_HOST="}) -replace "DB_HOST=", ""
-        $DB_USERNAME = (Get-Content ".env" | Where-Object {$_ -match "^DB_USERNAME="}) -replace "DB_USERNAME=", ""
-        $DB_PASSWORD = (Get-Content ".env" | Where-Object {$_ -match "^DB_PASSWORD="}) -replace "DB_PASSWORD=", ""
 
-        while ($true) {
-            docker exec mysql mysqladmin ping -h "$DB_HOST" -u "$DB_USERNAME" --password="$DB_PASSWORD" --silent
+        $DB_HOST = Get-EnvVariableFromFile ".env" "DB_HOST"
+        $DB_USERNAME = Get-EnvVariableFromFile ".env" "DB_USERNAME"
+        $DB_PASSWORD = Get-EnvVariableFromFile ".env" "DB_PASSWORD"
+
+        while ($RETRIES -lt $MAX_RETRIES) {
+            $cmdCheck = ".\vendor\bin\sail exec mysql mysqladmin ping -h $DB_HOST -u $DB_USERNAME --password=$DB_PASSWORD --silent"
+            $checkResult = powershell -NoProfile -Command $cmdCheck
             if ($LASTEXITCODE -eq 0) {
                 break
             }
             $RETRIES++
-            if ($RETRIES -ge $MAX_RETRIES) {
-                Write-Host "${RED}Banco de dados não ficou pronto a tempo. Verifique a configuração e tente novamente.${RESET}"
-                exit 1
-            }
-            Write-Host "${YELLOW}Banco de dados ainda não está pronto. Tentativa $RETRIES/$MAX_RETRIES...${RESET}"
+            Write-Color "Banco de dados ainda não está pronto. Tentativa $RETRIES/$MAX_RETRIES..." Yellow
             Start-Sleep -Seconds 2
         }
 
-        Write-Host "${GREEN}Banco de dados está pronto! Continuando...${RESET}"
-        Write-Host "${CYAN}Limpando cache de configuração e aplicação...${RESET}"
+        if ($RETRIES -ge $MAX_RETRIES) {
+            Write-Color "Banco de dados não ficou pronto a tempo. Verifique a configuração e tente novamente." Red
+            exit 1
+        }
+
+        Write-Color "Banco de dados está pronto! Continuando..." Green
+        Write-Color "Limpando cache de configuração e aplicação..." Cyan
         .\vendor\bin\sail artisan config:clear
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "${RED}Erro ao limpar cache de configuração.${RESET}"
+            Write-Color "Erro ao limpar cache de configuração." Red
             exit 1
         }
-
         .\vendor\bin\sail artisan cache:clear
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "${RED}Erro ao limpar cache de aplicação.${RESET}"
+            Write-Color "Erro ao limpar cache de aplicação." Red
             exit 1
         }
 
-        Write-Host "${CYAN}Executando migrações...${RESET}"
+        Write-Color "Executando migrações..." Cyan
         .\vendor\bin\sail artisan migrate --force
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "${RED}Erro ao executar migrações.${RESET}"
+            Write-Color "Erro ao executar migrações." Red
             exit 1
         }
 
-        Write-Host "${CYAN}Executando seeders...${RESET}"
+        Write-Color "Executando seeders..." Cyan
         .\vendor\bin\sail artisan db:seed --force
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "${RED}Erro ao executar seeders.${RESET}"
+            Write-Color "Erro ao executar seeders." Red
             exit 1
         }
 
-        $APP_PORTS.Add("$app|$APP_PORT") | Out-Null
+        $APP_PORTS += "$app|$APP_PORT"
 
     } else {
-        if (-not (Test-Path ".env.local")) {
-            Copy-Item $env ".env.local"
+        $envLocalPath = ".env.local"
+        if (!(Test-Path $envLocalPath)) {
+            Copy-Item $envExample $envLocalPath
             if ($LASTEXITCODE -ne 0) {
-                Write-Host "${RED}Erro ao copiar o arquivo .env.local para $app.${RESET}"
+                Write-Color "Erro ao copiar o arquivo .env.local para $app." Red
                 exit 1
             }
-            Write-Host "${GREEN}.env.local configurado para $app.${RESET}"
+            Write-Color ".env.local configurado para $app." Green
         } else {
-            Write-Host "${GREEN}Arquivo .env.local já existe para $app. Pulando cópia.${RESET}"
+            Write-Color "Arquivo .env.local já existe para $app. Pulando cópia." Green
         }
 
-        $APP_PORT = (Get-Content ".env.local" | Where-Object {$_ -match "^PORT="}) -replace "PORT=", ""
-        
+        $APP_PORT = Get-EnvVariableFromFile $envLocalPath "PORT"
         if ([string]::IsNullOrEmpty($APP_PORT)) {
-            Write-Host "${RED}Erro: Variável PORT não encontrada no arquivo .env.local de $app.${RESET}"
+            Write-Color "Erro: Variável PORT não encontrada no arquivo .env.local de $app." Red
             exit 1
         }
 
         if (Is-Port-In-Use $APP_PORT) {
-            Write-Host "${RED}A porta $APP_PORT já está em uso. Por favor, libere a porta ou altere a configuração.${RESET}"
+            Write-Color "A porta $APP_PORT já está em uso. Por favor, libere a porta ou altere a configuração." Red
             exit 1
         }
 
-        Write-Host "${CYAN}Instalando dependências para $app...${RESET}"
-        cmd /c $packageCommand
+        Write-Color "Instalando dependências para $app..." Cyan
+        & $pkgCmdExec install
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "${RED}Erro ao instalar dependências para $app. Verifique o gerenciador de pacotes.${RESET}"
+            Write-Color "Erro ao instalar dependências para $app. Verifique o gerenciador de pacotes." Red
             exit 1
         }
 
-        $APP_PORTS.Add("$app|$APP_PORT") | Out-Null
+        $APP_PORTS += "$app|$APP_PORT"
     }
 
     Set-Location ..
 }
 
 Write-Host ""
-Write-Host "${GREEN}Serviços iniciados com sucesso! Acesse os serviços abaixo:${RESET}"
-
-foreach ($entry in $APP_PORTS) {
-    $parts = $entry.Split("|")
-    $app_name = $parts[0]
-    $app_port_num = $parts[1]
-
-    switch ($app_name) {
-        "aeedo-connect-web" {
-            Write-Host "🌐 ${CYAN}Web:${RESET} http://localhost:$app_port_num"
-        }
-        "aeedo-connect-doc" {
-            Write-Host "📄 ${CYAN}Documentação:${RESET} http://localhost:$app_port_num"
-        }
-        "aeedo-connect-admin" {
-            Write-Host "🛠️ ${CYAN}Admin:${RESET} http://localhost:$app_port_num"
-        }
-        "aeedo-connect-api" {
-            Write-Host "⚙️ ${CYAN}API:${RESET} http://localhost:$app_port_num"
-        }
-        default {
-            Write-Host "${CYAN}$app_name:${RESET} http://localhost:$app_port_num"
-        }
-    }
-}
-
-Write-Host ""
-Write-Host "${BOLD}${GREEN}Setup local concluído com sucesso! 🚀${RESET}"
+Write-Color "Setup local concluído com sucesso! 🚀" Green
