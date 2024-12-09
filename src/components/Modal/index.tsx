@@ -92,7 +92,7 @@ const Modal = ({
       onClose={handleClose}
       className="fixed inset-0 z-50 overflow-y-auto"
     >
-      <DialogBackdrop className="fixed inset-0 bg-neutral-base-black bg-opacity-30 transition-opacity" />
+      <DialogBackdrop className="fixed inset-0 bg-black bg-opacity-25 transition-opacity" />
 
       <div
         className={clsx(
@@ -176,6 +176,7 @@ const Modal = ({
                       className="rounded-md px-5"
                       type="button"
                       variant="solid"
+                      color="secondary"
                       onClick={onOk || onClose}
                     >
                       {buttonsLabel?.confirm || "Confirmar"}

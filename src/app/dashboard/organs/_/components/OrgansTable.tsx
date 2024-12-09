@@ -1,20 +1,15 @@
 "use client";
 
+import EmptyState from "@/components/EmptyState";
 import SelectableButton from "@/components/SelectableButton";
+import { getOrganIcon } from "@/utils/getOrganIcon";
 import { GiHeartOrgan } from "react-icons/gi";
-import EmptyState from "../../../../../components/EmptyState";
-import { useAxios } from "../../../../../hooks/useAxios";
-import apiRoutes from "../../../../../routes/api";
-import { getOrganIcon } from "../../../../../utils/getOrganIcon";
-import { OrganResponse } from "../dto";
+import { useOrgansContext } from "../context/OrgansContext";
 
 const OrgansTable = () => {
-  const { data } = useAxios<OrganResponse[]>({
-    url: apiRoutes.organs.allocate.path,
-    method: apiRoutes.organs.allocate.method,
-  });
+  const { systemData } = useOrgansContext();
 
-  if (data?.length === 0) {
+  if (!systemData || systemData.length === 0) {
     return (
       <EmptyState
         title="Órgãos do Paciente"
@@ -27,7 +22,7 @@ const OrgansTable = () => {
   return (
     <div>
       <div className="grid sm:grid-cols-3 2xl:grid-cols-7 gap-4">
-        {data?.map((organ) => {
+        {systemData.map((organ) => {
           const organIcon = getOrganIcon(organ.slug);
 
           return (

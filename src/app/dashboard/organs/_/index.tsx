@@ -5,6 +5,7 @@ import Can from "@/components/Can";
 import SectionHeading from "@/components/SectionHeading";
 import { RoleEnum, useAuthContext } from "@/contexts/AuthContext";
 import routes from "@/routes";
+import { ChooseOrgans } from "./components/ChooseOrgans";
 import OrgansTable from "./components/OrgansTable";
 import { OrgansUsersTable } from "./components/OrgansUsersTable";
 
@@ -17,8 +18,16 @@ export const Organs = () => {
         <div className="mx-auto space-y-8 lg:mx-0 lg:max-w-none">
           <SectionHeading
             title="Órgãos"
-            description="Gerencie os órgãos da plataforma"
+            description={
+              user?.role === RoleEnum.USER
+                ? "Veja os órgãos associados ao seu perfil."
+                : "Gerencie os órgãos cadastrados no sistema."
+            }
           >
+            <Can roles={[RoleEnum.USER]}>
+              <ChooseOrgans />
+            </Can>
+
             <Can roles={[RoleEnum.ADMIN]}>
               <Button
                 href={routes.dashboard.organs.create.path}

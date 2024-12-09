@@ -1,23 +1,17 @@
 "use client";
 
 import EmptyState from "@/components/EmptyState";
+import SelectableButton from "@/components/SelectableButton";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { useAxios } from "@/hooks/useAxios";
-import apiRoutes from "@/routes/api";
+import { getOrganIcon } from "@/utils/getOrganIcon";
 import { GiHeartOrgan } from "react-icons/gi";
+import { useOrgansContext } from "../context/OrgansContext";
 
 export const OrgansUsersTable = () => {
   const { user } = useAuthContext();
+  const { organsPatientData } = useOrgansContext();
 
-  const { data } = useAxios({
-    url: apiRoutes.organs.listPatientOrgans.path,
-    method: apiRoutes.organs.listPatientOrgans.method,
-    params: user?.patientId
-      ? { patientId: user.patientId }
-      : { patientId: "123" },
-  });
-
-  if (!data || data.length === 0) {
+  if (!organsPatientData || organsPatientData.length === 0) {
     return (
       <EmptyState
         title="Órgãos do Paciente"
@@ -28,17 +22,20 @@ export const OrgansUsersTable = () => {
   }
 
   return (
-    <div>
-      <h1>Órgãos do Paciente {JSON.stringify(data?.message)}</h1>
-      {data && data.length > 0 ? (
-        <ul>
-          {data.map((organ: any) => (
-            <li key={organ.id}>{organ.name}</li>
-          ))}
-        </ul>
-      ) : (
-        <p>Nenhum órgão encontrado.</p>
-      )}
+    <div className="grid sm:grid-cols-3 2xl:grid-cols-7 gap-4">
+      {organsPatientData.map((organ) => {
+        const organIcon = getOrganIcon(organ.slug);
+
+        return (
+          <SelectableButton
+            key={organ.slug}
+            isSelected={false}
+            label={organ.name}
+            onClick={() => {}}
+            icon={organIcon}
+          />
+        );
+      })}
     </div>
   );
 };
