@@ -115,13 +115,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
 
         if (response?.data?.success) {
-          const { token_type, access_token } = response.data.data;
+          const { token_type, access_token, role } = response.data.data;
 
           nookies.set(null, "access_token", access_token, {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
           });
           nookies.set(null, "token_type", token_type, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: "/",
+          });
+
+          nookies.set(null, "role", role, {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
           });
