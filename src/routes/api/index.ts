@@ -18,9 +18,9 @@ const apiRoutes = {
   },
 
   addresses: {
-    show: { path: "/addresses/:id", method: "GET" },
+    show: { path: "/addresses/", method: "GET" },
     create: { path: "/addresses", method: "POST" },
-    update: { path: "/addresses/:id", method: "PATCH" },
+    update: { path: "/addresses", method: "PATCH" },
   },
 
   hospitals: {

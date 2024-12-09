@@ -1,5 +1,3 @@
-import Button from "@/components/Button";
-
 interface AddressItemProps {
   zipCode: string;
   street: string;
@@ -8,8 +6,6 @@ interface AddressItemProps {
   city: string;
   houseNumber: string;
   complement?: string;
-  createdAt: string;
-  onUpdate: () => void;
 }
 
 export const AddressField: React.FC<AddressItemProps> = ({
@@ -20,8 +16,6 @@ export const AddressField: React.FC<AddressItemProps> = ({
   city,
   houseNumber,
   complement,
-  createdAt,
-  onUpdate,
 }) => {
   return (
     <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-md">
@@ -31,18 +25,8 @@ export const AddressField: React.FC<AddressItemProps> = ({
             complement ? `(${complement})` : ""
           } - ${neighborhood}, ${city} - ${state}`}
         </p>
-        <p className="text-sm text-gray-500">
-          CEP: {zipCode} | Criado em: {new Date(createdAt).toLocaleDateString()}
-        </p>
+        <p className="text-sm text-gray-500">CEP: {zipCode}</p>
       </div>
-      <Button
-        className="text-primary-400"
-        color="secondary"
-        variant="unstyled"
-        onClick={onUpdate}
-      >
-        Editar
-      </Button>
     </div>
   );
 };

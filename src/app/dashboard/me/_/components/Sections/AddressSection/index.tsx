@@ -1,18 +1,14 @@
 "use client";
 
-import Button from "@/components/Button";
 import SectionHeading from "@/components/SectionHeading";
 import React from "react";
 import { useMeContext } from "../../../Context/MeContext";
 import { AddressField } from "../../AddressField";
+import { UpdateAddressButton } from "../../UpdateAddressButton";
 
 const AddressSection: React.FC = () => {
   const { patientDetails } = useMeContext();
   const address = patientDetails?.address;
-
-  const handleUpdate = () => {
-    console.log(`Atualizar endereço`);
-  };
 
   return (
     <div>
@@ -30,16 +26,12 @@ const AddressSection: React.FC = () => {
           city={address.city}
           houseNumber={address.houseNumber || ""}
           complement={address.complement || ""}
-          createdAt={address.createdAt}
-          onUpdate={handleUpdate}
         />
       ) : (
         <p className="text-gray-500 mt-4">Nenhum endereço encontrado.</p>
       )}
 
-      <Button className="w-full mt-6" color="primary" variant="unstyled">
-        {address ? "Atualizar Endereço" : "+ Adicionar Endereço"}
-      </Button>
+      <UpdateAddressButton />
     </div>
   );
 };
