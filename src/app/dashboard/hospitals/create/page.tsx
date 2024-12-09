@@ -30,6 +30,24 @@ const CreateHospitalPage: React.FC = () => {
   const { control, reset, handleSubmit, watch, setValue } = useForm<
     CreateHospitalVariables & CreateHospitalAddressVariables
   >();
+
+  let data: CreateHospitalVariables & CreateHospitalAddressVariables = {
+    data: {
+      name: "",
+      email: "",
+      phone: "",
+      cnpj: "",
+      password: "",
+      zipCode: "",
+      street: "",
+      neighborhood: "",
+      houseNumber: "",
+      complement: "",
+      city: "",
+      state: "",
+    },
+  };
+
   const submitImplementation: SubmitHandler<
     CreateHospitalVariables & CreateHospitalAddressVariables
   > = async (args) => {

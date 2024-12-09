@@ -1,8 +1,8 @@
 export interface CreateHospitalVariables {
   data: {
     name: string;
-    phone: number;
-    cnpj: number;
+    phone: string;
+    cnpj: string;
     email: string;
     password: string;
   };
@@ -12,10 +12,10 @@ export interface CreateHospitalAddressVariables {
   data: {
     city: string;
     state: string;
-    zipCode: number;
+    zipCode: string;
     street: string;
     neighborhood: string;
-    houseNumber: number;
+    houseNumber: string;
     complement: string;
   };
 }
