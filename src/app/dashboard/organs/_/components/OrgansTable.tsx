@@ -3,11 +3,14 @@
 import EmptyState from "@/components/EmptyState";
 import SelectableButton from "@/components/SelectableButton";
 import { getOrganIcon } from "@/utils/getOrganIcon";
+import { useState } from "react";
 import { GiHeartOrgan } from "react-icons/gi";
 import { useOrgansContext } from "../context/OrgansContext";
+import { UpdateOrgan } from "./UpdateOrgan";
 
 const OrgansTable = () => {
   const { systemData } = useOrgansContext();
+  const [openOrganId, setOpenOrganId] = useState<string | null>(null);
 
   if (!systemData || systemData.length === 0) {
     return (
@@ -19,6 +22,9 @@ const OrgansTable = () => {
     );
   }
 
+  const handleOpen = (id: string) => setOpenOrganId(id);
+  const handleClose = () => setOpenOrganId(null);
+
   return (
     <div>
       <div className="grid sm:grid-cols-3 2xl:grid-cols-7 gap-4">
@@ -26,13 +32,20 @@ const OrgansTable = () => {
           const organIcon = getOrganIcon(organ.slug);
 
           return (
-            <SelectableButton
-              key={organ.slug}
-              isSelected={false}
-              label={organ.name}
-              onClick={() => {}}
-              icon={organIcon}
-            />
+            <div key={organ.id}>
+              <SelectableButton
+                isSelected={false}
+                label={organ.name}
+                onClick={() => handleOpen(organ.id)}
+                icon={organIcon}
+              />
+
+              <UpdateOrgan
+                isOpen={openOrganId === organ.id}
+                onClose={handleClose}
+                organ={organ}
+              />
+            </div>
           );
         })}
       </div>

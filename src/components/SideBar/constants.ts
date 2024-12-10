@@ -28,7 +28,7 @@ export const navigation: NavigationItem[] = [
     href: routes.dashboard.hospitals.path,
     icon: BuildingStorefrontIcon,
     current: false,
-    roles: [RoleEnum.ADMIN, RoleEnum.USER],
+    roles: [RoleEnum.ADMIN],
   },
   {
     name: "Órgãos",

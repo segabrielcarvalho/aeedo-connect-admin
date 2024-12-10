@@ -25,7 +25,7 @@ const apiRoutes = {
 
   hospitals: {
     list: { path: "/hospitals", method: "GET" },
-    show: { path: "/hospitals/:id", method: "GET" },
+    show: { path: "/hospitals", method: "GET" },
     choose: { path: "/hospitals/choose-hospitals", method: "POST" },
     admin: {
       list: { path: "/manager/hospitals", method: "GET" },
@@ -50,7 +50,7 @@ const apiRoutes = {
       list: { path: "/manager/organs", method: "GET" },
       show: { path: "/manager/organs/:id", method: "GET" },
       create: { path: "/manager/organs", method: "POST" },
-      update: { path: "/manager/organs/:id", method: "PATCH" },
+      update: { path: "/manager/organs", method: "PATCH" },
     },
   },
 

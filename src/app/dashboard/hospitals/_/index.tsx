@@ -10,9 +10,6 @@ export const Hospitals = () => {
         title="Hospitais"
         description="Gerencie os Hospitais da plataforma"
       >
-        <Button color="secondary" variant="outline">
-          Filtros
-        </Button>
         <Button
           href={routes.dashboard.hospitals.create.path}
           color="secondary"

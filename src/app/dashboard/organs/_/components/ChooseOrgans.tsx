@@ -2,7 +2,6 @@ import Button from "@/components/Button";
 import EmptyState from "@/components/EmptyState";
 import Modal from "@/components/Modal";
 import SelectableButton from "@/components/SelectableButton";
-import { useAuthContext } from "@/contexts/AuthContext";
 import { useAxiosMutation } from "@/hooks/useAxiosMutation";
 import useDisclosure from "@/hooks/useDisclosure";
 import useToastHook from "@/hooks/useToastHook";
@@ -15,7 +14,6 @@ import { useOrgansContext } from "../context/OrgansContext";
 import { ChooseOrgansVariables } from "../dto";
 
 export const ChooseOrgans = () => {
-  const { user } = useAuthContext();
   const { success, error } = useToastHook();
   const { isOpen, onClose, onOpen } = useDisclosure();
 

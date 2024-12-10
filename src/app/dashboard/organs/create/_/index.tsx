@@ -9,6 +9,8 @@ import apiRoutes from "@/routes/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import SelectInput from "../../../../../components/Form/SelectInput";
+import { OrganType } from "../../../../../dto/global";
 import {
   CreateOrganResponse,
   createOrganSchema,
@@ -20,7 +22,7 @@ export const CreateOrganPage: React.FC = () => {
   const { error, success } = useToastHook();
   const { control, reset, handleSubmit } = useForm<CreateOrganVariables>({
     resolver: zodResolver(createOrganSchema),
-    defaultValues: { name: "", organ_type: "", slug: "" },
+    defaultValues: { name: "", organ_type: OrganType.NERVOSO, slug: "" },
   });
 
   const [submit, { loading }] = useAxiosMutation<
@@ -38,7 +40,7 @@ export const CreateOrganPage: React.FC = () => {
       await submit({ variables: args });
       success({ message: "Órgão criado com sucesso." });
       reset();
-      router.push(routes.dashboard.users.path);
+      router.push(routes.dashboard.organs.path);
     } catch (e) {
       console.error(e);
       error({ message: "Erro ao criar Órgão." });
@@ -77,14 +79,15 @@ export const CreateOrganPage: React.FC = () => {
           <Controller
             control={control}
             name="organ_type"
-            render={({ field: { name, onChange, ref } }) => (
-              <Input
-                ref={ref}
-                onChange={onChange}
+            render={({ field }) => (
+              <SelectInput
                 label="Tipo de Órgão"
-                placeholder='Ex: "Circulatório"'
-                name={name}
                 isRequired
+                options={Object.values(OrganType).map((type) => ({
+                  label: type,
+                  value: type,
+                }))}
+                {...field}
               />
             )}
           />

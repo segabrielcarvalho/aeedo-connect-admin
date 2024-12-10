@@ -2,7 +2,7 @@ import apiClient from "@/services/axiosClient";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { useEffect, useRef, useState } from "react";
 
-interface UseAxiosReturn<T> {
+export interface UseAxiosReturn<T> {
   data: T | null;
   error: Error | null;
   isLoading: boolean;

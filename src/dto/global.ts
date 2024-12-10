@@ -35,3 +35,16 @@ export enum BloodTypeEnum {
   OPositive = "O+",
   ONegative = "O-",
 }
+
+export enum OrganType {
+  NERVOSO = "nervoso",
+  DIGESTIVO = "digestivo",
+  RESPIRATORIO = "respiratório",
+  CIRCULATORIO = "circulatório",
+  URINARIO = "urinário",
+  REPRODUTOR = "reprodutor",
+  ENDOCRINO = "endócrino",
+  TEGUMENTAR = "tegumentar",
+  LOCOMOTOR = "locomotor",
+  SENSORIAL = "sensorial",
+}
