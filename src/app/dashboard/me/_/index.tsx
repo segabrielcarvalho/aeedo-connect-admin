@@ -18,7 +18,7 @@ export const Me = () => {
             <>
               <AddressSection />
               <HospitalSection />
-              <OrganSection userOrgans={["Coração", "Pulmão", "Rim"]} />
+              <OrganSection />
             </>
           )}
         </div>

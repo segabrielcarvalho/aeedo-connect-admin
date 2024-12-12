@@ -1,3 +1,4 @@
+"use client";
 import Button from "@/components/Button";
 import SectionHeading from "@/components/SectionHeading";
 import routes from "@/routes";

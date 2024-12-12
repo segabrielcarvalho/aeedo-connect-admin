@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import { Suspense } from "react";
 import { UsersContextProvider } from "./_/context/UsersContext";
 
 const Users = dynamic<Record<string, never>>(() =>
@@ -7,9 +8,11 @@ const Users = dynamic<Record<string, never>>(() =>
 
 const UsersPage = () => {
   return (
-    <UsersContextProvider>
-      <Users />
-    </UsersContextProvider>
+    <Suspense fallback={<div>Loading...</div>}>
+      <UsersContextProvider>
+        <Users />
+      </UsersContextProvider>
+    </Suspense>
   );
 };
 
